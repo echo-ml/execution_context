@@ -1,0 +1,145 @@
+#pragma once
+
+#include <echo/execution_context/structure.h>
+#include <echo/execution_context/expression_traits.h>
+#include <echo/concept2.h>
+#include <echo/k_array.h>
+
+namespace echo {
+namespace execution_context {
+namespace concept {
+
+////////////
+// scalar //
+////////////
+
+namespace detail {
+namespace concept {
+struct Scalar : Concept {
+  template <class T>
+  auto require(T&& x)
+      -> list<std::is_trivially_copyable<T>::value, same<T, decltype(-x)>(),
+              same<T, decltype(x + x)>(), same<T, decltype(x - x)>(),
+              same<T, decltype(x* x)>(), same<T, decltype(x / x)>()>;
+};
+}
+}
+
+template <class T>
+constexpr bool scalar() {
+  return models<detail::concept::Scalar, T>();
+}
+
+//////////////////////
+// matrix_evaluator //
+//////////////////////
+
+namespace detail {
+namespace concept {
+struct MatrixEvaluator : Concept {
+  template <class T>
+  auto require(T&& evaluator)
+      -> list<std::is_trivially_copy_constructible<T>::value,
+              scalar<uncvref_t<decltype(evaluator(0, 0, 0, 0))>>()>;
+};
+}
+}
+
+template <class T>
+constexpr bool matrix_evaluator() {
+  return models<detail::concept::MatrixEvaluator, T>();
+}
+
+//////////////////////
+// vector_evaluator //
+//////////////////////
+
+namespace detail {
+namespace concept {
+struct VectorEvaluator : Concept {
+  template <class T>
+  auto require(T&& evaluator)
+      -> list<std::is_trivially_copy_constructible<T>::value,
+              scalar<uncvref_t<decltype(evaluator(0))>>()>;
+};
+}
+}
+
+template <class T>
+constexpr bool vector_evaluator() {
+  return models<detail::concept::VectorEvaluator, T>();
+}
+
+///////////////
+// evaluator //
+///////////////
+
+template <class T>
+constexpr bool evaluator() {
+  return matrix_evaluator<T>() || vector_evaluator<T>();
+}
+
+///////////////
+// structure //
+///////////////
+
+template <class T>
+constexpr bool structure() {
+  return std::is_convertible<T,
+                             echo::execution_context::structure::base>::value;
+}
+
+///////////////////////
+// matrix_expression //
+///////////////////////
+
+namespace detail {
+namespace expression_concept {
+struct MatrixExpression : Concept {
+  template <class T>
+  auto require(T&& expression) -> list<
+      std::is_trivially_copy_constructible<T>::value,
+      k_array::concept::shape<uncvref_t<decltype(expression.shape())>>(),
+      structure<expression_traits::structure<T>>(),
+      matrix_evaluator<uncvref_t<decltype(expression.evaluator())>>()>;
+};
+}
+}
+
+template <class T>
+constexpr bool matrix_expression() {
+  return models<detail::expression_concept::MatrixExpression, T>();
+}
+
+///////////////////////
+// vector_expression //
+///////////////////////
+
+namespace detail {
+namespace expression_concept {
+struct VectorExpression : Concept {
+  template <class T>
+  auto require(T&& expression) -> list<
+      std::is_trivially_copy_constructible<T>::value,
+      k_array::concept::shape<uncvref_t<decltype(expression.shape())>>(),
+      vector_evaluator<uncvref_t<decltype(expression.evaluator())>>()>;
+};
+}
+}
+
+template <class T>
+constexpr bool vector_expression() {
+  return models<detail::expression_concept::VectorExpression, T>();
+}
+
+////////////////
+// expression //
+////////////////
+
+template <class T>
+constexpr bool expression() {
+  return matrix_expression<T>() || vector_expression<T>();
+}
+}
+}
+}
