@@ -10,7 +10,11 @@ using namespace echo::execution_context::intel_tbb;
 
 TEST_CASE("square_vector") {
   const int N = 16;
-  double a[N], b[N];
+  struct alignas(128)  {
+    double data[N];
+  } a_buffer, b_buffer;
+  double (&a)[N] = a_buffer.data;
+  double (&b)[N] = b_buffer.data;
   std::iota(std::begin(a), std::end(a), 0);
   auto eval = [&](index_t i) { return b[i] = a[i] * a[i]; };
   auto expr = make_expression(N, eval);

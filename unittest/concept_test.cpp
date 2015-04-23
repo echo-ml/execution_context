@@ -7,6 +7,10 @@ using namespace echo::execution_context;
 using namespace echo::execution_context::test;
 
 TEST_CASE("concept") {
+  auto eval1 = [](index_t x) ->double { return x*x; };
+
+  REQUIRE(execution_context::concept::vector_evaluator<decltype(eval1)>());
+
   auto expr1 = make_expression(10, [](index_t x) -> double { return x * x; });
   REQUIRE(execution_context::concept::vector_expression<decltype(expr1)>());
   REQUIRE(!execution_context::concept::matrix_expression<decltype(expr1)>());

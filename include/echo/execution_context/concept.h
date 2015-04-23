@@ -18,7 +18,10 @@ namespace concept {
 struct Scalar : Concept {
   template <class T>
   auto require(T&& x)
-      -> list<std::is_trivially_copyable<T>::value, same<T, decltype(-x)>(),
+      -> list<
+      std::is_pod<T>::value,
+      // std::is_trivially_echo::concept::copyable<T>::value, 
+      same<T, decltype(-x)>(),
               same<T, decltype(x + x)>(), same<T, decltype(x - x)>(),
               same<T, decltype(x* x)>(), same<T, decltype(x / x)>()>;
 };
@@ -39,8 +42,9 @@ namespace concept {
 struct MatrixEvaluator : Concept {
   template <class T>
   auto require(T&& evaluator)
-      -> list<std::is_trivially_copy_constructible<T>::value,
-              scalar<uncvref_t<decltype(evaluator(0, 0, 0, 0))>>()>;
+      -> list<
+        std::is_copy_constructible<T>::value,
+        scalar<uncvref_t<std::result_of_t<T(index_t, index_t, index_t, index_t)>>>()>;
 };
 }
 }
@@ -59,8 +63,10 @@ namespace concept {
 struct VectorEvaluator : Concept {
   template <class T>
   auto require(T&& evaluator)
-      -> list<std::is_trivially_copy_constructible<T>::value,
-              scalar<uncvref_t<decltype(evaluator(0))>>()>;
+      -> list<
+      std::is_copy_constructible<T>::value,
+      scalar<uncvref_t<std::result_of_t<T(index_t)>>>()
+              >;
 };
 }
 }
@@ -98,7 +104,7 @@ namespace expression_concept {
 struct MatrixExpression : Concept {
   template <class T>
   auto require(T&& expression) -> list<
-      std::is_trivially_copy_constructible<T>::value,
+      std::is_copy_constructible<T>::value,
       k_array::concept::shape<uncvref_t<decltype(expression.shape())>>(),
       structure<expression_traits::structure<T>>(),
       matrix_evaluator<uncvref_t<decltype(expression.evaluator())>>()>;
@@ -120,7 +126,7 @@ namespace expression_concept {
 struct VectorExpression : Concept {
   template <class T>
   auto require(T&& expression) -> list<
-      std::is_trivially_copy_constructible<T>::value,
+      std::is_copy_constructible<T>::value,
       k_array::concept::shape<uncvref_t<decltype(expression.shape())>>(),
       vector_evaluator<uncvref_t<decltype(expression.evaluator())>>()>;
 };
