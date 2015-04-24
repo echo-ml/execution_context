@@ -18,12 +18,11 @@ namespace concept {
 struct Scalar : Concept {
   template <class T>
   auto require(T&& x)
-      -> list<
-      std::is_pod<T>::value,
-      // std::is_trivially_echo::concept::copyable<T>::value, 
-      same<T, decltype(-x)>(),
-              same<T, decltype(x + x)>(), same<T, decltype(x - x)>(),
-              same<T, decltype(x* x)>(), same<T, decltype(x / x)>()>;
+      -> list<std::is_pod<T>::value,
+              // std::is_trivially_echo::concept::copyable<T>::value,
+              same<T, decltype(-x)>(), same<T, decltype(x + x)>(),
+              same<T, decltype(x - x)>(), same<T, decltype(x* x)>(),
+              same<T, decltype(x / x)>()>;
 };
 }
 }
@@ -42,9 +41,9 @@ namespace concept {
 struct MatrixEvaluator : Concept {
   template <class T>
   auto require(T&& evaluator)
-      -> list<
-        std::is_copy_constructible<T>::value,
-        scalar<uncvref_t<std::result_of_t<T(index_t, index_t, index_t, index_t)>>>()>;
+      -> list<std::is_copy_constructible<T>::value,
+              scalar<uncvref_t<
+                  std::result_of_t<T(index_t, index_t, index_t, index_t)>>>()>;
 };
 }
 }
@@ -63,10 +62,8 @@ namespace concept {
 struct VectorEvaluator : Concept {
   template <class T>
   auto require(T&& evaluator)
-      -> list<
-      std::is_copy_constructible<T>::value,
-      scalar<uncvref_t<std::result_of_t<T(index_t)>>>()
-              >;
+      -> list<std::is_copy_constructible<T>::value,
+              scalar<uncvref_t<std::result_of_t<T(index_t)>>>()>;
 };
 }
 }
@@ -100,7 +97,7 @@ constexpr bool structure() {
 ///////////////////////
 
 namespace detail {
-namespace expression_concept {
+namespace concept {
 struct MatrixExpression : Concept {
   template <class T>
   auto require(T&& expression) -> list<
@@ -114,7 +111,27 @@ struct MatrixExpression : Concept {
 
 template <class T>
 constexpr bool matrix_expression() {
-  return models<detail::expression_concept::MatrixExpression, T>();
+  return models<detail::concept::MatrixExpression, T>();
+}
+
+namespace detail {
+namespace concept {
+
+template <structure::uplo_t Uplo, bool Strict>
+void match_half_structure(structure::half<Uplo, Strict>);
+
+struct HalfMatrixExpression : Concept {
+  template <class T>
+  auto require(T&& expression) -> list<
+      matrix_expression<T>(), valid<decltype(match_half_structure(
+                                  expression_traits::structure<T>()))>()>;
+};
+}
+}
+
+template <class T>
+constexpr bool half_matrix_expression() {
+  return models<detail::concept::HalfMatrixExpression, T>();
 }
 
 ///////////////////////
@@ -122,7 +139,7 @@ constexpr bool matrix_expression() {
 ///////////////////////
 
 namespace detail {
-namespace expression_concept {
+namespace concept {
 struct VectorExpression : Concept {
   template <class T>
   auto require(T&& expression) -> list<
@@ -135,7 +152,7 @@ struct VectorExpression : Concept {
 
 template <class T>
 constexpr bool vector_expression() {
-  return models<detail::expression_concept::VectorExpression, T>();
+  return models<detail::concept::VectorExpression, T>();
 }
 
 ////////////////

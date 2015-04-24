@@ -11,7 +11,7 @@ using namespace echo::execution_context;
 using namespace echo::execution_context::test;
 using namespace echo::execution_context::intel_tbb;
 
-BENCHMARK_SET("tbb_expression_execution", NumTrials(5),
+BENCHMARK_SET("tbb_expression_execution", NumTrials(1),
               LinearRange(1, 100'000, 10'000), Units<std::chrono::microseconds>()) 
               {
   auto N = touchstone::n();
@@ -42,7 +42,7 @@ BENCHMARK_SET("tbb_expression_execution", NumTrials(5),
   }
 }
 
-BENCHMARK_SET("square", NumTrials(5),
+BENCHMARK_SET("square", NumTrials(1),
               LinearRange(1, 1'000'000, 100'000), Units<std::chrono::microseconds>()) 
 {
   auto N = touchstone::n();

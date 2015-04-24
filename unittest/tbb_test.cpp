@@ -8,7 +8,7 @@ using namespace echo::execution_context;
 using namespace echo::execution_context::test;
 using namespace echo::execution_context::intel_tbb;
 
-TEST_CASE("square_vector") {
+TEST_CASE("tbb_vector") {
   const int N = 16;
   struct alignas(128)  {
     double data[N];
@@ -56,4 +56,171 @@ TEST_CASE("square_vector") {
     REQUIRE(b[0] == a[0] * a[0]);
     REQUIRE(b[N - 1] == a[N - 1] * a[N - 1]);
   }
+}
+
+TEST_CASE("tbb_general_matrix") {
+  const int M = 2;
+  const int N = 3;
+  struct alignas(128)  {
+    double data[M][N];
+  } a_buffer, b_buffer;
+  double (&a)[M][N] = a_buffer.data;
+  double (&b)[M][N] = b_buffer.data;
+  std::iota(&a[0][0], &a[0][0] + M*N, 0);
+  auto eval = [&](index_t i, index_t, index_t j, index_t) {
+    return b[i][j] = a[i][j] * a[i][j];
+  };
+  auto expr = make_expression(M, N, eval);
+  ExpressionExecuter executer;
+  SECTION("serial") {
+    executer(expr);
+  }
+  SECTION("parallel1") {
+    executer(execution_mode::parallel, expr);
+  }
+  SECTION("parallel1") {
+    executer(execution_mode::parallel_coarse, expr);
+  }
+  REQUIRE(b[0][0] == 0);
+  REQUIRE(b[0][1] == 1);
+  REQUIRE(b[0][2] == 4);
+  REQUIRE(b[1][0] == 9);
+  REQUIRE(b[1][1] == 16);
+  REQUIRE(b[1][2] == 25);
+}
+
+TEST_CASE("tbb_lower_half_matrix") {
+  const int N = 2;
+  double a[N][N];
+  double b[N][N];
+  int count[N][N];
+  std::fill_n(&b[0][0], N*N, 0);
+  std::fill_n(&count[0][0], N*N, 0);
+  std::iota(&a[0][0], &a[0][0] + N*N, 0);
+  auto eval = [&](index_t i, index_t, index_t j, index_t) {
+    ++count[i][j];
+    return b[i][j] = a[i][j] * a[i][j];
+  };
+  auto expr = make_expression<structure::lower_half>(N, N, eval);
+  ExpressionExecuter executer;
+  SECTION("serial") {
+    executer(expr);
+  }
+  SECTION("parallel1") {
+    executer(execution_mode::parallel, expr);
+  }
+  SECTION("parallel2") {
+    executer(execution_mode::parallel_coarse, expr);
+  }
+  REQUIRE(b[0][0] == 0);
+  REQUIRE(b[0][1] == 0);
+  REQUIRE(b[1][0] == 4);
+  REQUIRE(b[1][1] == 9);
+
+  REQUIRE(count[0][0] == 1);
+  REQUIRE(count[0][1] == 0);
+  REQUIRE(count[1][0] == 1);
+  REQUIRE(count[1][1] == 1);
+}
+
+TEST_CASE("tbb_strict_lower_half_matrix") {
+  const int N = 2;
+  double a[N][N];
+  double b[N][N];
+  int count[N][N];
+  std::fill_n(&b[0][0], N*N, 0);
+  std::fill_n(&count[0][0], N*N, 0);
+  std::iota(&a[0][0], &a[0][0] + N*N, 0);
+  auto eval = [&](index_t i, index_t, index_t j, index_t) {
+    ++count[i][j];
+    return b[i][j] = a[i][j] * a[i][j];
+  };
+  auto expr = make_expression<structure::strict_lower_half>(N, N, eval);
+  ExpressionExecuter executer;
+  SECTION("serial") {
+    executer(expr);
+  }
+  SECTION("parallel1") {
+    executer(execution_mode::parallel, expr);
+  }
+  SECTION("parallel2") {
+    executer(execution_mode::parallel_coarse, expr);
+  }
+  REQUIRE(b[0][0] == 0);
+  REQUIRE(b[0][1] == 0);
+  REQUIRE(b[1][0] == 4);
+  REQUIRE(b[1][1] == 0);
+
+  REQUIRE(count[0][0] == 0);
+  REQUIRE(count[0][1] == 0);
+  REQUIRE(count[1][0] == 1);
+  REQUIRE(count[1][1] == 0);
+}
+
+TEST_CASE("tbb_upper_half_matrix") {
+  const int N = 2;
+  double a[N][N];
+  double b[N][N];
+  int count[N][N];
+  std::fill_n(&b[0][0], N*N, 0);
+  std::fill_n(&count[0][0], N*N, 0);
+  std::iota(&a[0][0], &a[0][0] + N*N, 0);
+  auto eval = [&](index_t i, index_t, index_t j, index_t) {
+    ++count[i][j];
+    return b[i][j] = a[i][j] * a[i][j];
+  };
+  auto expr = make_expression<structure::upper_half>(N, N, eval);
+  ExpressionExecuter executer;
+  SECTION("serial") {
+    executer(expr);
+  }
+  SECTION("parallel1") {
+    executer(execution_mode::parallel, expr);
+  }
+  SECTION("parallel2") {
+    executer(execution_mode::parallel_coarse, expr);
+  }
+  REQUIRE(b[0][0] == 0);
+  REQUIRE(b[0][1] == 1);
+  REQUIRE(b[1][0] == 0);
+  REQUIRE(b[1][1] == 9);
+
+  REQUIRE(count[0][0] == 1);
+  REQUIRE(count[0][1] == 1);
+  REQUIRE(count[1][0] == 0);
+  REQUIRE(count[1][1] == 1);
+}
+
+TEST_CASE("tbb_strict_upper_half_matrix") {
+  const int N = 2;
+  double a[N][N];
+  double b[N][N];
+  int count[N][N];
+  std::fill_n(&b[0][0], N*N, 0);
+  std::fill_n(&count[0][0], N*N, 0);
+  std::iota(&a[0][0], &a[0][0] + N*N, 0);
+  auto eval = [&](index_t i, index_t, index_t j, index_t) {
+    ++count[i][j];
+    return b[i][j] = a[i][j] * a[i][j];
+  };
+  auto expr = make_expression<structure::strict_upper_half>(N, N, eval);
+  ExpressionExecuter executer;
+  SECTION("serial") {
+    executer(expr);
+  }
+  SECTION("parallel1") {
+    executer(execution_mode::parallel, expr);
+  }
+  SECTION("parallel2") {
+    executer(execution_mode::parallel_coarse, expr);
+  }
+  REQUIRE(b[0][0] == 0);
+  REQUIRE(b[0][1] == 1);
+  REQUIRE(b[1][0] == 0);
+  REQUIRE(b[1][1] == 0);
+
+  REQUIRE(count[0][0] == 0);
+  REQUIRE(count[0][1] == 1);
+  REQUIRE(count[1][0] == 0);
+  REQUIRE(count[1][1] == 0);
 }

@@ -17,6 +17,7 @@ constexpr option::Option<temporal_t, temporal_t::yes> temporal{};
 constexpr option::Option<temporal_t, temporal_t::no> nontemporal{};
 
 constexpr option::Option<parallel_t, parallel_t::serial> serial{};
+constexpr option::Option<parallel_t, parallel_t::fine> parallel{};
 constexpr option::Option<parallel_t, parallel_t::fine> parallel_fine{};
 constexpr option::Option<parallel_t, parallel_t::coarse> parallel_coarse{};
 
