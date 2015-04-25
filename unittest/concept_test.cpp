@@ -1,6 +1,7 @@
 #include <echo/execution_context/test/expression.h>
 #include <echo/execution_context/concept.h>
 #include <echo/test.h>
+#include <functional>
 
 using namespace echo;
 using namespace echo::execution_context;
@@ -21,4 +22,10 @@ TEST_CASE("concept") {
   REQUIRE(!execution_context::concept::vector_expression<decltype(expr2)>());
   REQUIRE(execution_context::concept::matrix_expression<decltype(expr2)>());
   REQUIRE(execution_context::concept::expression<decltype(expr2)>());
+
+  auto expr3 = make_reduction_expression(
+    5_index, [](index_t i) { return 22.0; }, std::plus<double>(), 0.0);
+  REQUIRE(execution_context::concept::reduction_expression<decltype(expr3)>());
+  REQUIRE(!execution_context::concept::vector_expression<decltype(expr3)>());
+  REQUIRE(execution_context::concept::expression<decltype(expr3)>());
 }

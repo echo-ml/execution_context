@@ -155,13 +155,46 @@ constexpr bool vector_expression() {
   return models<detail::concept::VectorExpression, T>();
 }
 
+//////////////////////////
+// reduction_expression //
+//////////////////////////
+
+namespace detail {
+namespace concept {
+struct ReductionExpression : Concept {
+  template <class T>
+  auto require(T&& expression) -> list<
+      std::is_copy_constructible<T>::value,
+      k_array::concept::shape<uncvref_t<decltype(expression.shape())>>(),
+      vector_evaluator<uncvref_t<decltype(expression.mapper())>>(),
+
+      // disable these checks; they don't work with the intel compiler
+      // same<decltype(expression.reducer()(expression.mapper()(0),
+      //                                    expression.mapper()(0))),
+      //      expression_traits::value_type<T>>(),
+      // same<uncvref_t<decltype(expression.identity())>,
+      //      expression_traits::value_type<T>>(),
+
+      valid<decltype(expression.identity())>(),
+      valid<decltype(expression.reducer())>()
+      >;
+};
+}
+}
+
+template <class T>
+constexpr bool reduction_expression() {
+  return models<detail::concept::ReductionExpression, T>();
+}
+
 ////////////////
 // expression //
 ////////////////
 
 template <class T>
 constexpr bool expression() {
-  return matrix_expression<T>() || vector_expression<T>();
+  return matrix_expression<T>() || vector_expression<T>() ||
+    reduction_expression<T>();
 }
 }
 }

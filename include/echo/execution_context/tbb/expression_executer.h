@@ -20,16 +20,16 @@ class ExpressionExecuter {
   template <
       class Expression,
       CONCEPT_REQUIRES(execution_context::concept::expression<Expression>())>
-  void operator()(const Expression& expression) const {
-    this->operator()(kDefaultOptions, expression);
+  auto operator()(const Expression& expression) const {
+    return this->operator()(kDefaultOptions, expression);
   }
 
   template <
       class Options, class Expression,
       CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
                        execution_context::concept::expression<Expression>())>
-  void operator()(Options options, const Expression& expression) const {
-    execute(kDefaultOptions | options, expression);
+  auto operator()(Options options, const Expression& expression) const {
+    return execute(kDefaultOptions | options, expression);
   }
 
  private:
@@ -290,6 +290,75 @@ class ExpressionExecuter {
     for (index_t j = first; j < last; ++j)
       detail::for_(options, 0, j,
                    [&](index_t i) { return evaluator(i, n, j, n); });
+  }
+
+  //////////////////////////
+  // reduction-expression //
+  //////////////////////////
+
+  template <
+      class Options, class Expression,
+      CONCEPT_REQUIRES(
+          option::concept::option_list<Options>() &&
+          execution_context::concept::reduction_expression<Expression>() &&
+          get_option<execution_mode::parallel_t, Options>() ==
+              execution_mode::parallel_fine)>
+  auto execute(Options options, const Expression& expression) const {
+    using Scalar = expression_traits::value_type<Expression>;
+    return tbb::parallel_reduce(
+        tbb::blocked_range<index_t>(0, get_num_elements(expression)),
+        expression.identity(),
+        [&](tbb::blocked_range<index_t> range, Scalar init) {
+          return execute(options, range.begin(), range.end(), init, expression);
+        },
+        expression.reducer());
+  }
+
+  template <
+      class Options, class Expression,
+      CONCEPT_REQUIRES(
+          option::concept::option_list<Options>() &&
+          execution_context::concept::reduction_expression<Expression>() &&
+          get_option<execution_mode::parallel_t, Options>() ==
+              execution_mode::parallel_coarse)>
+  auto execute(Options options, const Expression& expression) const {
+    using Scalar = expression_traits::value_type<Expression>;
+    return tbb::parallel_reduce(
+        tbb::blocked_range<index_t>(0, get_num_elements(expression),
+                                    kCoarseGrainularity),
+        expression.identity(),
+        [&](tbb::blocked_range<index_t> range, Scalar init) {
+          return execute(options, range.begin(), range.end(), init, expression);
+        },
+        expression.reducer());
+  }
+
+  template <
+      class Options, class Expression,
+      CONCEPT_REQUIRES(
+          option::concept::option_list<Options>() &&
+          execution_context::concept::reduction_expression<Expression>() &&
+          get_option<execution_mode::parallel_t, Options>() ==
+              execution_mode::serial)>
+  auto execute(Options options, const Expression& expression) const {
+    return execute(options, 0, get_num_elements(expression),
+                   expression.identity(), expression);
+  }
+
+  template <class Options, class Expression,
+            CONCEPT_REQUIRES(
+                option::concept::option_list<Options>() &&
+                execution_context::concept::reduction_expression<Expression>())>
+  auto execute(Options options, index_t first, index_t last,
+               expression_traits::value_type<Expression> init,
+               const Expression& expression) const {
+    auto result = init;
+    auto mapper = expression.mapper();
+    auto reducer = expression.reducer();
+    detail::for_(options, first, last, [&](index_t i) {
+      return result = reducer(result, mapper(i));
+    });
+    return result;
   }
 };
 }

@@ -2,6 +2,7 @@
 #include <echo/execution_context/tbb/expression_executer.h>
 #include <echo/test.h>
 #include <numeric>
+#include <functional>
 
 using namespace echo;
 using namespace echo::execution_context;
@@ -223,4 +224,44 @@ TEST_CASE("tbb_strict_upper_half_matrix") {
   REQUIRE(count[0][1] == 1);
   REQUIRE(count[1][0] == 0);
   REQUIRE(count[1][1] == 0);
+}
+
+TEST_CASE("plus reduction") {
+  const int N = 5;
+  double a[N];
+  std::iota(std::begin(a), std::end(a), 0);
+  auto expr = make_reduction_expression(N, [&](index_t i) { return a[i]; },
+    std::plus<double>(), 0.0);
+  double result = 0;
+  ExpressionExecuter executer;
+  SECTION("serial") {
+    result = executer(expr);
+  }
+  SECTION("parallel1") {
+    result = executer(execution_mode::parallel, expr);
+  }
+  SECTION("serial") {
+    result = executer(execution_mode::parallel_coarse, expr);
+  }
+  REQUIRE(result == 10);
+}
+
+TEST_CASE("multiplies reduction") {
+  const int N = 5;
+  double a[N];
+  std::iota(std::begin(a), std::end(a), 1);
+  auto expr = make_reduction_expression(N, [&](index_t i) { return a[i]; },
+    std::multiplies<double>(), 1.0);
+  double result = 0;
+  ExpressionExecuter executer;
+  SECTION("serial") {
+    result = executer(expr);
+  }
+  SECTION("parallel1") {
+    result = executer(execution_mode::parallel, expr);
+  }
+  SECTION("serial") {
+    result = executer(execution_mode::parallel_coarse, expr);
+  }
+  REQUIRE(result == 120);
 }
