@@ -72,6 +72,7 @@ template<class Shape, class Mapper, class Reducer>
 class ReductionExpression : Shape {
   using Scalar = decltype(std::declval<Mapper>()(0));
 public:
+  using value_type = decltype(std::declval<Mapper>()(0));
   ReductionExpression(const Shape& shape, const Mapper& mapper, 
     const Reducer& reducer, Scalar identity)
     : Shape(shape), _mapper(mapper), _reducer(reducer), _identity(identity) {}

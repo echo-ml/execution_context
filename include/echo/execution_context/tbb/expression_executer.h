@@ -304,7 +304,7 @@ class ExpressionExecuter {
           get_option<execution_mode::parallel_t, Options>() ==
               execution_mode::parallel_fine)>
   auto execute(Options options, const Expression& expression) const {
-    using Scalar = expression_traits::value_type<Expression>;
+    using Scalar = uncvref_t<decltype(std::declval<Expression>().identity())>;
     return tbb::parallel_reduce(
         tbb::blocked_range<index_t>(0, get_num_elements(expression)),
         expression.identity(),
@@ -322,7 +322,7 @@ class ExpressionExecuter {
           get_option<execution_mode::parallel_t, Options>() ==
               execution_mode::parallel_coarse)>
   auto execute(Options options, const Expression& expression) const {
-    using Scalar = expression_traits::value_type<Expression>;
+    using Scalar = uncvref_t<decltype(std::declval<Expression>().identity())>;
     return tbb::parallel_reduce(
         tbb::blocked_range<index_t>(0, get_num_elements(expression),
                                     kCoarseGrainularity),
@@ -350,7 +350,7 @@ class ExpressionExecuter {
                 option::concept::option_list<Options>() &&
                 execution_context::concept::reduction_expression<Expression>())>
   auto execute(Options options, index_t first, index_t last,
-               expression_traits::value_type<Expression> init,
+               uncvref_t<decltype(std::declval<Expression>().identity())> init,
                const Expression& expression) const {
     auto result = init;
     auto mapper = expression.mapper();

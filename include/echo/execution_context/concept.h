@@ -171,9 +171,9 @@ struct ReductionExpression : Concept {
       // disable these checks; they don't work with the intel compiler
       // same<decltype(expression.reducer()(expression.mapper()(0),
       //                                    expression.mapper()(0))),
-      //      expression_traits::value_type<T>>(),
+      //      decltype(expression.mapper()(0))>(),
       // same<uncvref_t<decltype(expression.identity())>,
-      //      expression_traits::value_type<T>>(),
+      //      uncvref_t<decltype(expression.mapper()(0))>>(),
 
       valid<decltype(expression.identity())>(),
       valid<decltype(expression.reducer())>()
