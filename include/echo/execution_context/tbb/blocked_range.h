@@ -29,6 +29,28 @@ template <class T>
 constexpr bool extent() {
   return std::is_integral<T>::value;
 }
+
+///////////////////
+// blocked_range //
+///////////////////
+
+namespace detail {
+namespace blocked_range {
+struct BlockedRange : Concept {
+  template <class T>
+  auto require(T&& r) -> list<
+      std::is_copy_constructible<T>::value, std::is_destructible<T>::value,
+      same<decltype(std::declval<const T&>().is_divisible()), bool>(),
+      same<decltype(std::declval<const T&>().empty()), bool>(),
+      std::is_constructible<T, T&, tbb::split>::value>;
+};
+}
+}
+
+template <class T>
+constexpr bool blocked_range() {
+  return models<detail::blocked_range::BlockedRange, T>();
+}
 }
 
 //////////////////
@@ -89,6 +111,8 @@ class BlockedRange {
   size_type _grainsize;
 };
 
+CONCEPT_ASSERT(concept::blocked_range<BlockedRange<std::size_t>>());
+
 ////////////////
 // ExtentType //
 ////////////////
@@ -97,15 +121,15 @@ namespace detail {
 namespace blocked_range {
 
 template <int I, class... Extents>
-class ExtentTypeImpl {};
+struct ExtentTypeImpl {};
 
 template <int I, class Extent>
-class ExtentTypeImpl<I, Extent> {
+struct ExtentTypeImpl<I, Extent> {
   using type = Extent;
 };
 
 template <int I, class ExtentFirst, class... ExtentsRest>
-class ExtentTypeImpl<I, ExtentFirst, ExtentsRest...> {
+struct ExtentTypeImpl<I, ExtentFirst, ExtentsRest...> {
   using type =
       std::conditional_t<I == 0, ExtentFirst,
                          typename ExtentTypeImpl<I - 1, ExtentsRest...>::type>;
@@ -124,11 +148,11 @@ namespace detail {
 namespace blocked_range {
 
 template <class, class...>
-class BlockedRangeTupleImpl {};
+struct BlockedRangeTupleImpl {};
 
 template <std::size_t... Indexes, class... Extents>
-class BlockedRangeTupleImpl<std::index_sequence<Indexes...>, Extents...> {
-  using type = std::tuple<BlockedRange<ExtentType<Indexes, Extents...>...>>;
+struct BlockedRangeTupleImpl<std::index_sequence<Indexes...>, Extents...> {
+  using type = std::tuple<BlockedRange<ExtentType<Indexes, Extents...>>...>;
 };
 
 template <std::size_t N, class... Extents>
@@ -165,11 +189,11 @@ void split_impl(const SplitFactor& split_factor,
   auto& blocked_range2 = std::get<I2>(left_blocked_ranges);
   if (blocked_range1.size() * blocked_range2.grainsize() <
       blocked_range2.size() * blocked_range1.grainsize())
-    split_impl(std::index_sequence<I2, IRest...>(), left_blocked_ranges,
-               right_blocked_ranges);
+    split_impl(split_factor, std::index_sequence<I2, IRest...>(),
+               left_blocked_ranges, right_blocked_ranges);
   else
-    split_impl(std::index_sequence<I1, IRest...>(), left_blocked_ranges,
-               right_blocked_ranges);
+    split_impl(split_factor, std::index_sequence<I1, IRest...>(),
+               left_blocked_ranges, right_blocked_ranges);
 }
 
 template <
@@ -226,56 +250,64 @@ auto get_last(Extents... extents) {
 // or_ //
 /////////
 
-namespace detail { namespace blocked_range {
+namespace detail {
+namespace blocked_range {
 
-bool or_impl() { return true; }
+bool or_impl() { return false; }
 
-template<class... BoolsRest>
+template <class... BoolsRest>
 bool or_impl(bool bool_first, BoolsRest... bools_rest) {
   return bool_first || or_impl(bools_rest...);
 }
 
-template<class... Bools, CONCEPT_REQUIRES(
-  const_algorithm::or_c<std::is_convertible<Bools, bool>::value...>())>
+template <class... Bools, CONCEPT_REQUIRES(const_algorithm::and_c<
+                              std::is_convertible<Bools, bool>::value...>())>
 bool or_(Bools... bools) {
   return or_impl(bools...);
 }
-
-}}
+}
+}
 
 //////////////
 // is_empty //
 //////////////
 
-namespace detail { namespace blocked_range {
-template<std::size_t... Indexes, class... Extents>
+namespace detail {
+namespace blocked_range {
+template <std::size_t... Indexes, class... Extents>
 bool is_empty_impl(std::index_sequence<Indexes...>,
-  const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
+                   const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
   return or_(std::get<Indexes>(blocked_ranges).empty()...);
 }
-template<class... Extents, CONCEPT_REQUIRES(
-  const_algorithm::or_c<concept::extent<Extents>()...>())>
+template <class... Extents, CONCEPT_REQUIRES(const_algorithm::and_c<
+                                concept::extent<Extents>()...>())>
 bool is_empty(const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
-  return true;
+  return is_empty_impl(std::make_index_sequence<sizeof...(Extents)>(),
+                       blocked_ranges);
 }
-}}
+}
+}
 
 //////////////////
 // is_divisible //
 //////////////////
 
-namespace detail { namespace blocked_range {
-template<std::size_t... Indexes, class... Extents>
-bool is_divisible_impl(std::index_sequence<Indexes...>,
-  const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
+namespace detail {
+namespace blocked_range {
+template <std::size_t... Indexes, class... Extents>
+bool is_divisible_impl(
+    std::index_sequence<Indexes...>,
+    const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
   return or_(std::get<Indexes>(blocked_ranges).is_divisible()...);
 }
-template<class... Extents, CONCEPT_REQUIRES(
-  const_algorithm::or_c<concept::extent<Extents>()...>())>
+template <class... Extents, CONCEPT_REQUIRES(const_algorithm::and_c<
+                                concept::extent<Extents>()...>())>
 bool is_divisible(const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
-  return true;
+  return is_divisible_impl(std::make_index_sequence<sizeof...(Extents)>(),
+                           blocked_ranges);
 }
-}}
+}
+}
 
 ///////////////////
 // KBlockedRange //
@@ -304,17 +336,29 @@ class KBlockedRange {
     detail::blocked_range::split(split_factor, other._blocked_ranges,
                                  _blocked_ranges);
   }
+  template <class... BlockedRanges,
+            CONCEPT_REQUIRES(
+                sizeof...(BlockedRanges) == N &&
+                const_algorithm::and_c<
+                    concept::blocked_range<BlockedRanges>()...>() &&
+                std::is_constructible<
+                    detail::blocked_range::BlockedRangeTuple<N, Extents...>,
+                    const BlockedRanges&...>::value)>
+  KBlockedRange(const BlockedRanges&... blocked_ranges)
+      : _blocked_ranges(blocked_ranges...) {}
 
-  template <int I, CONCEPT_REQUIRES(I < N)>
-  friend const auto& get_blocked_range(KBlockedRange& k_blocked_range) {
-    return std::get<I>(k_blocked_range._blocked_ranges);
+  template <int I, CONCEPT_REQUIRES(I >= 0 && I < N)>
+  const auto& project() const {
+    return std::get<I>(_blocked_ranges);
   }
+
   bool empty() const {
     return detail::blocked_range::is_empty(_blocked_ranges);
   }
   bool is_divisible() const {
     return detail::blocked_range::is_divisible(_blocked_ranges);
   }
+
  private:
   template <std::size_t... Indexes, class... ExtentsInit>
   KBlockedRange(std::index_sequence<Indexes...>, ExtentsInit... extents)
@@ -324,6 +368,56 @@ class KBlockedRange {
             detail::blocked_range::get_last<Indexes>(extents...))...) {}
   detail::blocked_range::BlockedRangeTuple<N, Extents...> _blocked_ranges;
 };
+
+template <
+    int I, int N, class... Extents,
+    CONCEPT_REQUIRES(I >= 0 && I < N &&
+                     const_algorithm::and_c<concept::extent<Extents>()...>())>
+const auto& project(const KBlockedRange<N, Extents...>& k_blocked_range) {
+  return k_blocked_range.template project<I>();
+}
+
+CONCEPT_ASSERT(concept::blocked_range<KBlockedRange<1, std::size_t>>());
+
+////////////////////////
+// make_blocked_range //
+////////////////////////
+
+template <class Extent, CONCEPT_REQUIRES(concept::extent<Extent>())>
+auto make_blocked_range(Extent first, Extent last, std::size_t grainsize = 1) {
+  return BlockedRange<Extent>(first, last, grainsize);
+}
+
+namespace detail {
+namespace blocked_range {
+template <
+    std::size_t... Indexes, class... Extents,
+    CONCEPT_REQUIRES(sizeof...(Indexes)*2 == sizeof...(Extents) &&
+                     const_algorithm::and_c<concept::extent<Extents>()...>())>
+auto make_blocked_range_impl(std::index_sequence<Indexes...>,
+                             Extents... extents) {
+  return KBlockedRange<sizeof...(Indexes),
+                       decltype(get_first<Indexes>(extents...))...>(extents...);
+}
+}
+}
+
+template <
+    class... Extents,
+    CONCEPT_REQUIRES(const_algorithm::and_c<concept::extent<Extents>()...>() &&
+                     sizeof...(Extents) % 2 == 0)>
+auto make_blocked_range(Extents... extents) {
+  return detail::blocked_range::make_blocked_range_impl(
+      std::make_index_sequence<sizeof...(Extents) / 2>(), extents...);
+}
+
+template <
+    class... Extents,
+    CONCEPT_REQUIRES(sizeof...(Extents) > 1 &&
+                     const_algorithm::and_c<concept::extent<Extents>()...>())>
+auto make_blocked_range(const BlockedRange<Extents>&... blocked_ranges) {
+  return KBlockedRange<sizeof...(Extents), Extents...>(blocked_ranges...);
+}
 }
 }
 }
