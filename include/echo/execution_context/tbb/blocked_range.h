@@ -203,7 +203,7 @@ template <
 void split(const SplitFactor& split_factor,
            std::tuple<BlockedRange<Extents>...>& left_blocked_ranges,
            std::tuple<BlockedRange<Extents>...>& right_blocked_ranges) {
-  split_impl(split_factor, std::make_index_sequence<sizeof...(Extents)>(),
+  split_impl(split_factor, std::index_sequence_for<Extents...>(),
              left_blocked_ranges, right_blocked_ranges);
 }
 }
@@ -282,8 +282,7 @@ bool is_empty_impl(std::index_sequence<Indexes...>,
 template <class... Extents, CONCEPT_REQUIRES(const_algorithm::and_c<
                                 concept::extent<Extents>()...>())>
 bool is_empty(const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
-  return is_empty_impl(std::make_index_sequence<sizeof...(Extents)>(),
-                       blocked_ranges);
+  return is_empty_impl(std::index_sequence_for<Extents...>(), blocked_ranges);
 }
 }
 }
@@ -303,7 +302,7 @@ bool is_divisible_impl(
 template <class... Extents, CONCEPT_REQUIRES(const_algorithm::and_c<
                                 concept::extent<Extents>()...>())>
 bool is_divisible(const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
-  return is_divisible_impl(std::make_index_sequence<sizeof...(Extents)>(),
+  return is_divisible_impl(std::index_sequence_for<Extents...>(),
                            blocked_ranges);
 }
 }
