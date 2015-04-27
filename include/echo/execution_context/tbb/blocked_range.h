@@ -1,6 +1,7 @@
 #pragma once
 
 #include <echo/concept2.h>
+#include <echo/k_array.h>
 #include <tbb/tbb.h>
 #include <cassert>
 #include <utility>
@@ -253,7 +254,7 @@ auto get_last(Extents... extents) {
 namespace detail {
 namespace blocked_range {
 
-bool or_impl() { return false; }
+inline bool or_impl() { return false; }
 
 template <class... BoolsRest>
 bool or_impl(bool bool_first, BoolsRest... bools_rest) {
@@ -334,6 +335,7 @@ class KBlockedRange {
       : _blocked_ranges(other._blocked_ranges) {
     detail::blocked_range::split(split_factor, other._blocked_ranges,
                                  _blocked_ranges);
+    assert(!other.empty() && !empty());
   }
   template <class... BlockedRanges,
             CONCEPT_REQUIRES(
@@ -416,6 +418,67 @@ template <
                      const_algorithm::and_c<concept::extent<Extents>()...>())>
 auto make_blocked_range(const BlockedRange<Extents>&... blocked_ranges) {
   return KBlockedRange<sizeof...(Extents), Extents...>(blocked_ranges...);
+}
+
+namespace detail {
+namespace blocked_range {
+template <std::size_t... Indexes, class Shape,
+          CONCEPT_REQUIRES(k_array::concept::shape<Shape>()),
+          CONCEPT_REQUIRES(shape_traits::num_dimensions<Shape>() ==
+                           sizeof...(Indexes))>
+auto make_blocked_range_impl(std::index_sequence<Indexes...>,
+                             const Shape& shape) {
+  return KBlockedRange<sizeof...(Indexes), index_t>(
+      BlockedRange<index_t>(0, get_extent<Indexes>(shape))...);
+}
+}
+}
+
+template <class Shape, CONCEPT_REQUIRES(k_array::concept::shape<Shape>())>
+auto make_blocked_range(const Shape& shape) {
+  return detail::blocked_range::make_blocked_range_impl(
+      std::make_index_sequence<shape_traits::num_dimensions<Shape>()>(), shape);
+}
+
+namespace detail {
+namespace blocked_range {
+template <class Continuation, class Shape,
+          CONCEPT_REQUIRES(k_array::concept::shape<Shape>())>
+auto make_blocked_range_impl(std::index_sequence<>, std::size_t,
+                             const Continuation& continuation,
+                             const Shape& shape) {
+  return continuation();
+}
+
+template <std::size_t IndexFirst, std::size_t... IndexesRest,
+          class Continuation, class Shape,
+          CONCEPT_REQUIRES(k_array::concept::shape<Shape>())>
+auto make_blocked_range_impl(std::index_sequence<IndexFirst, IndexesRest...>,
+                             std::size_t grainsize,
+                             const Continuation& continuation,
+                             const Shape& shape) {
+  auto extent = get_extent<IndexFirst>(shape);
+  return make_blocked_range_impl(
+      std::index_sequence<IndexesRest...>(),
+      grainsize / get_extent<IndexFirst>(shape) +
+          (grainsize % get_extent<IndexFirst>(shape) > 0),
+      [&](const auto&... blocked_ranges) {
+        return continuation(BlockedRange<index_t>(0, extent, grainsize),
+                            blocked_ranges...);
+      },
+      shape);
+}
+}
+}
+
+template <class Shape, CONCEPT_REQUIRES(k_array::concept::shape<Shape>())>
+auto make_blocked_range(const Shape& shape, std::size_t grainsize) {
+  const int N = shape_traits::num_dimensions<Shape>();
+  return detail::blocked_range::make_blocked_range_impl(
+      std::make_index_sequence<N>(),
+      grainsize, [](const auto&... blocked_ranges) {
+        return KBlockedRange<N, index_t>(blocked_ranges...);
+      }, shape);
 }
 }
 }

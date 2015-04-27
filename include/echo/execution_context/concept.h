@@ -32,34 +32,13 @@ constexpr bool scalar() {
   return models<detail::concept::Scalar, T>();
 }
 
-//////////////////////
-// matrix_evaluator //
-//////////////////////
+////////////////////
+// flat_evaluator //
+////////////////////
 
 namespace detail {
 namespace concept {
-struct MatrixEvaluator : Concept {
-  template <class T>
-  auto require(T&& evaluator)
-      -> list<std::is_copy_constructible<T>::value,
-              scalar<uncvref_t<
-                  std::result_of_t<T(index_t, index_t, index_t, index_t)>>>()>;
-};
-}
-}
-
-template <class T>
-constexpr bool matrix_evaluator() {
-  return models<detail::concept::MatrixEvaluator, T>();
-}
-
-//////////////////////
-// vector_evaluator //
-//////////////////////
-
-namespace detail {
-namespace concept {
-struct VectorEvaluator : Concept {
+struct FlatEvaluator : Concept {
   template <class T>
   auto require(T&& evaluator)
       -> list<std::is_copy_constructible<T>::value,
@@ -69,8 +48,44 @@ struct VectorEvaluator : Concept {
 }
 
 template <class T>
-constexpr bool vector_evaluator() {
-  return models<detail::concept::VectorEvaluator, T>();
+constexpr bool flat_evaluator() {
+  return models<detail::concept::FlatEvaluator, T>();
+}
+
+////////////////////////
+// k_shaped_evaluator //
+////////////////////////
+
+namespace detail {
+namespace concept {
+template <std::size_t... Indexes, class Evaluator>
+auto evaluator_result(std::index_sequence<Indexes...>,
+                      const Evaluator& evaluator)
+    -> decltype(evaluator((Indexes, index_t(0))...));
+
+template <int K>
+struct KShapedEvaluator : Concept {
+  template <class T>
+  auto require(T&& evaluator)
+      -> list<std::is_copy_constructible<T>::value,
+              scalar<uncvref_t<decltype(evaluator_result(
+                  std::make_index_sequence<2 * K>(), evaluator))>>()>;
+};
+}
+}
+
+template <int K, class T>
+constexpr bool k_shaped_evaluator() {
+  return models<detail::concept::KShapedEvaluator<K>, T>();
+}
+
+//////////////////////
+// matrix_evaluator //
+//////////////////////
+
+template <class T>
+constexpr bool matrix_evaluator() {
+  return k_shaped_evaluator<2, T>();
 }
 
 ///////////////
@@ -79,7 +94,7 @@ constexpr bool vector_evaluator() {
 
 template <class T>
 constexpr bool evaluator() {
-  return matrix_evaluator<T>() || vector_evaluator<T>();
+  return matrix_evaluator<T>() || flat_evaluator<T>();
 }
 
 ///////////////
@@ -90,6 +105,51 @@ template <class T>
 constexpr bool structure() {
   return std::is_convertible<T,
                              echo::execution_context::structure::base>::value;
+}
+
+/////////////////////
+// flat_expression //
+/////////////////////
+
+namespace detail {
+namespace concept {
+struct FlatExpression : Concept {
+  template <class T>
+  auto require(T&& expression) -> list<
+      std::is_copy_constructible<T>::value,
+      k_array::concept::shape<uncvref_t<decltype(expression.shape())>>(),
+      flat_evaluator<uncvref_t<decltype(expression.evaluator())>>()>;
+};
+}
+}
+
+template <class T>
+constexpr bool flat_expression() {
+  return models<detail::concept::FlatExpression, T>();
+}
+
+///////////////////////
+// shaped_expression //
+///////////////////////
+
+namespace detail {
+namespace concept {
+struct ShapedExpression : Concept {
+  template <class T>
+  auto require(T&& expression) -> list<
+      std::is_copy_constructible<T>::value,
+      k_array::concept::shape<uncvref_t<decltype(expression.shape())>>(),
+      structure<expression_traits::structure<T>>(),
+      k_shaped_evaluator<
+          shape_traits::num_dimensions<decltype(expression.shape())>(),
+          uncvref_t<decltype(expression.evaluator())>>()>;
+};
+}
+}
+
+template <class T>
+constexpr bool shaped_expression() {
+  return models<detail::concept::ShapedExpression, T>();
 }
 
 ///////////////////////
@@ -134,27 +194,6 @@ constexpr bool half_matrix_expression() {
   return models<detail::concept::HalfMatrixExpression, T>();
 }
 
-///////////////////////
-// vector_expression //
-///////////////////////
-
-namespace detail {
-namespace concept {
-struct VectorExpression : Concept {
-  template <class T>
-  auto require(T&& expression) -> list<
-      std::is_copy_constructible<T>::value,
-      k_array::concept::shape<uncvref_t<decltype(expression.shape())>>(),
-      vector_evaluator<uncvref_t<decltype(expression.evaluator())>>()>;
-};
-}
-}
-
-template <class T>
-constexpr bool vector_expression() {
-  return models<detail::concept::VectorExpression, T>();
-}
-
 //////////////////////////
 // reduction_expression //
 //////////////////////////
@@ -166,7 +205,7 @@ struct ReductionExpression : Concept {
   auto require(T&& expression) -> list<
       std::is_copy_constructible<T>::value,
       k_array::concept::shape<uncvref_t<decltype(expression.shape())>>(),
-      vector_evaluator<uncvref_t<decltype(expression.mapper())>>(),
+      flat_evaluator<uncvref_t<decltype(expression.mapper())>>(),
 
       // disable these checks; they don't work with the intel compiler
       // same<decltype(expression.reducer()(expression.mapper()(0),
@@ -193,8 +232,8 @@ constexpr bool reduction_expression() {
 
 template <class T>
 constexpr bool expression() {
-  return matrix_expression<T>() || vector_expression<T>() ||
-    reduction_expression<T>();
+  return matrix_expression<T>() || flat_expression<T>() ||
+    reduction_expression<T>() || shaped_expression<T>();
 }
 }
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <echo/execution_context/tbb/for.h>
+#include <echo/execution_context/tbb/blocked_range.h>
 #include <echo/execution_context/concept.h>
 #include <echo/execution_context/option.h>
 #include <tbb/tbb.h>
@@ -40,7 +41,7 @@ class ExpressionExecuter {
   template <class Options, class Expression,
             CONCEPT_REQUIRES(
                 option::concept::option_list<Options>() &&
-                execution_context::concept::vector_expression<Expression>() &&
+                execution_context::concept::flat_expression<Expression>() &&
                 get_option<execution_mode::parallel_t, Options>() ==
                     execution_mode::serial)>
   void execute(Options options, const Expression& expression) const {
@@ -51,7 +52,7 @@ class ExpressionExecuter {
   template <class Options, class Expression,
             CONCEPT_REQUIRES(
                 option::concept::option_list<Options>() &&
-                execution_context::concept::vector_expression<Expression>() &&
+                execution_context::concept::flat_expression<Expression>() &&
                 get_option<execution_mode::parallel_t, Options>() ==
                     execution_mode::parallel_fine)>
   void execute(Options options, const Expression& expression) const {
@@ -66,7 +67,7 @@ class ExpressionExecuter {
   template <class Options, class Expression,
             CONCEPT_REQUIRES(
                 option::concept::option_list<Options>() &&
-                execution_context::concept::vector_expression<Expression>() &&
+                execution_context::concept::flat_expression<Expression>() &&
                 get_option<execution_mode::parallel_t, Options>() ==
                     execution_mode::parallel_coarse)>
   void execute(Options options, const Expression& expression) const {
@@ -82,62 +83,65 @@ class ExpressionExecuter {
   // general-matrix //
   ////////////////////
 
-  template <class Options, class Expression,
-            CONCEPT_REQUIRES(
-                option::concept::option_list<Options>() &&
-                get_option<execution_mode::parallel_t, Options>() ==
-                    execution_mode::parallel_fine &&
-                execution_context::concept::matrix_expression<Expression>()),
-            CONCEPT_REQUIRES(
-                std::is_convertible<expression_traits::structure<Expression>,
-                                    structure::general>::value)>
-  void execute(Options options, const Expression& expression) const {
-    tbb::parallel_for(
-        tbb::blocked_range2d<index_t, index_t>(0, get_extent<0>(expression), 0,
-                                               get_extent<1>(expression)),
-        [&](tbb::blocked_range2d<index_t, index_t> range) {
-          execute(options, range.rows().begin(), range.rows().end(),
-                  range.cols().begin(), range.cols().end(), expression);
-        });
-  }
-
-  template <class Options, class Expression,
-            CONCEPT_REQUIRES(
-                option::concept::option_list<Options>() &&
-                get_option<execution_mode::parallel_t, Options>() ==
-                    execution_mode::parallel_coarse &&
-                execution_context::concept::matrix_expression<Expression>()),
-            CONCEPT_REQUIRES(
-                std::is_convertible<expression_traits::structure<Expression>,
-                                    structure::general>::value)>
-  void execute(Options options, const Expression& expression) const {
-    auto num_rows = get_extent<0>(expression);
-    auto num_columns = get_extent<1>(expression);
-    auto column_grainularity =
-        kCoarseGrainularity / num_rows + (kCoarseGrainularity % num_rows > 0);
-    tbb::parallel_for(tbb::blocked_range2d<index_t, index_t>(
-                          0, num_rows, kCoarseGrainularity, 0, num_columns,
-                          column_grainularity),
-                      [&](tbb::blocked_range2d<index_t, index_t> range) {
-                        execute(options, range.rows().begin(),
-                                range.rows().end(), range.cols().begin(),
-                                range.cols().end(), expression);
-                      });
-  }
-
-  template <class Options, class Expression,
-            CONCEPT_REQUIRES(
-                option::concept::option_list<Options>() &&
-                get_option<execution_mode::parallel_t, Options>() ==
-                    execution_mode::serial &&
-                execution_context::concept::matrix_expression<Expression>()),
-            CONCEPT_REQUIRES(
-                std::is_convertible<expression_traits::structure<Expression>,
-                                    structure::general>::value)>
-  void execute(Options options, const Expression& expression) const {
-    execute(options, 0, get_extent<0>(expression), 0, get_extent<1>(expression),
-            expression);
-  }
+  // template <class Options, class Expression,
+  //           CONCEPT_REQUIRES(
+  //               option::concept::option_list<Options>() &&
+  //               get_option<execution_mode::parallel_t, Options>() ==
+  //                   execution_mode::parallel_fine &&
+  //               execution_context::concept::matrix_expression<Expression>()),
+  //           CONCEPT_REQUIRES(
+  //               std::is_convertible<expression_traits::structure<Expression>,
+  //                                   structure::general>::value)>
+  // void execute(Options options, const Expression& expression) const {
+  //   tbb::parallel_for(
+  //       tbb::blocked_range2d<index_t, index_t>(0, get_extent<0>(expression),
+  //       0,
+  //                                              get_extent<1>(expression)),
+  //       [&](tbb::blocked_range2d<index_t, index_t> range) {
+  //         execute(options, range.rows().begin(), range.rows().end(),
+  //                 range.cols().begin(), range.cols().end(), expression);
+  //       });
+  // }
+  //
+  // template <class Options, class Expression,
+  //           CONCEPT_REQUIRES(
+  //               option::concept::option_list<Options>() &&
+  //               get_option<execution_mode::parallel_t, Options>() ==
+  //                   execution_mode::parallel_coarse &&
+  //               execution_context::concept::matrix_expression<Expression>()),
+  //           CONCEPT_REQUIRES(
+  //               std::is_convertible<expression_traits::structure<Expression>,
+  //                                   structure::general>::value)>
+  // void execute(Options options, const Expression& expression) const {
+  //   auto num_rows = get_extent<0>(expression);
+  //   auto num_columns = get_extent<1>(expression);
+  //   auto column_grainularity =
+  //       kCoarseGrainularity / num_rows + (kCoarseGrainularity % num_rows >
+  //       0);
+  //   tbb::parallel_for(tbb::blocked_range2d<index_t, index_t>(
+  //                         0, num_rows, kCoarseGrainularity, 0, num_columns,
+  //                         column_grainularity),
+  //                     [&](tbb::blocked_range2d<index_t, index_t> range) {
+  //                       execute(options, range.rows().begin(),
+  //                               range.rows().end(), range.cols().begin(),
+  //                               range.cols().end(), expression);
+  //                     });
+  // }
+  //
+  // template <class Options, class Expression,
+  //           CONCEPT_REQUIRES(
+  //               option::concept::option_list<Options>() &&
+  //               get_option<execution_mode::parallel_t, Options>() ==
+  //                   execution_mode::serial &&
+  //               execution_context::concept::matrix_expression<Expression>()),
+  //           CONCEPT_REQUIRES(
+  //               std::is_convertible<expression_traits::structure<Expression>,
+  //                                   structure::general>::value)>
+  // void execute(Options options, const Expression& expression) const {
+  //   execute(options, 0, get_extent<0>(expression), 0,
+  //   get_extent<1>(expression),
+  //           expression);
+  // }
 
   template <class Options, class Expression,
             CONCEPT_REQUIRES(
@@ -155,6 +159,96 @@ class ExpressionExecuter {
         return evaluator(i, get_extent<0>(expression), j,
                          get_extent<1>(expression));
       });
+  }
+
+  ///////////////////////
+  // shaped-expression //
+  ///////////////////////
+
+  template <class Options, class Expression,
+            CONCEPT_REQUIRES(
+                option::concept::option_list<Options>() &&
+                get_option<execution_mode::parallel_t, Options>() ==
+                    execution_mode::parallel_fine &&
+                execution_context::concept::shaped_expression<Expression>()),
+            CONCEPT_REQUIRES(
+                std::is_convertible<expression_traits::structure<Expression>,
+                                    structure::general>::value)>
+  void execute(Options options, const Expression& expression) const {
+    const int NumDimensions = expression_traits::num_dimensions<Expression>();
+    tbb::parallel_for(
+        make_blocked_range(expression.shape()),
+        [&](const KBlockedRange<NumDimensions, index_t>& blocked_range) {
+          execute(options, std::make_index_sequence<NumDimensions>(),
+                  blocked_range, expression.evaluator());
+        });
+  }
+
+  template <class Options, class Expression,
+            CONCEPT_REQUIRES(
+                option::concept::option_list<Options>() &&
+                get_option<execution_mode::parallel_t, Options>() ==
+                    execution_mode::parallel_coarse &&
+                execution_context::concept::shaped_expression<Expression>()),
+            CONCEPT_REQUIRES(
+                std::is_convertible<expression_traits::structure<Expression>,
+                                    structure::general>::value)>
+  void execute(Options options, const Expression& expression) const {
+    const int NumDimensions = expression_traits::num_dimensions<Expression>();
+    tbb::parallel_for(
+        make_blocked_range(expression.shape(), kCoarseGrainularity),
+        [&](const KBlockedRange<NumDimensions, index_t>& blocked_range) {
+          execute(options, std::make_index_sequence<NumDimensions>(),
+                  blocked_range, expression.evaluator());
+        });
+  }
+
+  template <class Options, class Expression,
+            CONCEPT_REQUIRES(
+                option::concept::option_list<Options>() &&
+                get_option<execution_mode::parallel_t, Options>() ==
+                    execution_mode::serial &&
+                execution_context::concept::shaped_expression<Expression>()),
+            CONCEPT_REQUIRES(
+                std::is_convertible<expression_traits::structure<Expression>,
+                                    structure::general>::value)>
+  void execute(Options options, const Expression& expression) const {
+    const int NumDimensions = expression_traits::num_dimensions<Expression>();
+    execute(options, std::make_index_sequence<NumDimensions>(),
+            make_blocked_range(expression.shape()), expression.evaluator());
+  }
+
+  template <class Options, std::size_t IndexFirst, std::size_t... IndexesRest,
+            int N, class Evaluator,
+            CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
+                             sizeof...(IndexesRest) > 0 &&
+                             execution_context::concept::k_shaped_evaluator<
+                                 1 + sizeof...(IndexesRest), Evaluator>())>
+  void execute(Options options, std::index_sequence<IndexFirst, IndexesRest...>,
+               const KBlockedRange<N, index_t>& blocked_range,
+               const Evaluator& evaluator) const {
+    auto projection = project<N - 1 - IndexFirst>(blocked_range);
+    auto size_last = projection.size();
+    for (index_t index_last = projection.begin();
+         index_last != projection.end(); ++index_last) {
+      execute(options, std::index_sequence<IndexesRest...>(), blocked_range,
+              [&](auto... indexes_rest) {
+                return evaluator(indexes_rest..., index_last, size_last);
+              });
+    }
+  }
+
+  template <class Options, int N, class Evaluator,
+            CONCEPT_REQUIRES(
+                option::concept::option_list<Options>() &&
+                execution_context::concept::k_shaped_evaluator<1, Evaluator>())>
+  void execute(Options options, std::index_sequence<N - 1>,
+               const KBlockedRange<N, index_t>& blocked_range,
+               const Evaluator& evaluator) const {
+    auto projection = project<0>(blocked_range);
+    auto size = projection.size();
+    detail::for_(options, projection.begin(), projection.end(),
+                 [&](index_t i) { return evaluator(i, size); });
   }
 
   /////////////////

@@ -39,7 +39,7 @@ auto make_expression(const Shape& shape, const Evaluator& evaluator) {
 template <
     class Extent, class Evaluator,
     CONCEPT_REQUIRES(k_array::concept::extent<Extent>() &&
-                     execution_context::concept::vector_evaluator<Evaluator>())>
+                     execution_context::concept::flat_evaluator<Evaluator>())>
 auto make_expression(Extent extent, const Evaluator& evaluator) {
   return make_expression<structure::general>(make_k_shape(extent), evaluator);
 }
@@ -92,7 +92,7 @@ private:
 
 template <class Shape, class Mapper, class Reducer,
           CONCEPT_REQUIRES(k_array::concept::shape<Shape>() &&
-                           concept::vector_evaluator<Mapper>()),
+                           concept::flat_evaluator<Mapper>()),
           CONCEPT_REQUIRES(concept::reduction_expression<
               ReductionExpression<Shape, Mapper, Reducer>>())>
 auto make_reduction_expression(const Shape& shape, const Mapper& mapper,
@@ -104,7 +104,7 @@ auto make_reduction_expression(const Shape& shape, const Mapper& mapper,
 
 template <class Extent, class Mapper, class Reducer,
           CONCEPT_REQUIRES(k_array::concept::extent<Extent>() &&
-                           concept::vector_evaluator<Mapper>()),
+                           concept::flat_evaluator<Mapper>()),
           CONCEPT_REQUIRES(concept::reduction_expression<ReductionExpression<
               KShapeFromExtents<Extent>, Mapper, Reducer>>())>
 auto make_reduction_expression(Extent extent, const Mapper& mapper,

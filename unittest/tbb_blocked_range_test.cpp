@@ -158,3 +158,32 @@ TEST_CASE("tbb_k_blocked_range_split3") {
     CHECK(s23.end() == 30);
   }
 }
+
+TEST_CASE("tbb_blocked_range_from_shape") {
+  SECTION("no grainularity") {
+    auto b1 = make_blocked_range(make_k_shape(10, 5));
+    auto s1 = project<0>(b1);
+    auto s2 = project<1>(b1);
+
+    CHECK(s1.begin() == 0);
+    CHECK(s1.end() == 10);
+    CHECK(s1.grainsize() == 1);
+
+    CHECK(s2.begin() == 0);
+    CHECK(s2.end() == 5);
+    CHECK(s2.grainsize() == 1);
+  }
+  SECTION("with grainularity") {
+    auto b1 = make_blocked_range(make_k_shape(10, 5), 5);
+    auto s1 = project<0>(b1);
+    auto s2 = project<1>(b1);
+
+    CHECK(s1.begin() == 0);
+    CHECK(s1.end() == 10);
+    CHECK(s1.grainsize() == 5);
+
+    CHECK(s2.begin() == 0);
+    CHECK(s2.end() == 5);
+    CHECK(s2.grainsize() == 1);
+  }
+}

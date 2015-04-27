@@ -18,7 +18,7 @@ namespace detail {
 template <
     class Options, class Evaluator,
     CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
-                     execution_context::concept::vector_evaluator<Evaluator>()),
+                     execution_context::concept::flat_evaluator<Evaluator>()),
     CONCEPT_REQUIRES(get_option<execution_mode::simd_t, Options>() ==
                          execution_mode::nosimd &&
                      get_option<execution_mode::temporal_t, Options>() ==
@@ -33,7 +33,7 @@ void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
 template <
     class Options, class Evaluator,
     CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
-                     execution_context::concept::vector_evaluator<Evaluator>()),
+                     execution_context::concept::flat_evaluator<Evaluator>()),
     CONCEPT_REQUIRES(get_option<execution_mode::simd_t, Options>() ==
                          execution_mode::simd &&
                      get_option<execution_mode::temporal_t, Options>() ==
@@ -49,7 +49,7 @@ void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
 template <
     class Options, class Evaluator,
     CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
-                     execution_context::concept::vector_evaluator<Evaluator>()),
+                     execution_context::concept::flat_evaluator<Evaluator>()),
     CONCEPT_REQUIRES(get_option<execution_mode::simd_t, Options>() ==
                          execution_mode::nosimd &&
                      get_option<execution_mode::temporal_t, Options>() ==
@@ -65,7 +65,7 @@ void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
 template <
     class Options, class Evaluator,
     CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
-                     execution_context::concept::vector_evaluator<Evaluator>()),
+                     execution_context::concept::flat_evaluator<Evaluator>()),
     CONCEPT_REQUIRES(get_option<execution_mode::simd_t, Options>() ==
                          execution_mode::simd &&
                      get_option<execution_mode::temporal_t, Options>() ==
@@ -82,7 +82,7 @@ void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
 template <
     class Options, class Evaluator,
     CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
-                     execution_context::concept::vector_evaluator<Evaluator>()),
+                     execution_context::concept::flat_evaluator<Evaluator>()),
     CONCEPT_REQUIRES(get_option<execution_mode::simd_t, Options>() ==
                          execution_mode::simd &&
                      get_option<execution_mode::temporal_t, Options>() ==
@@ -99,7 +99,7 @@ void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
 template <
     class Options, class Evaluator,
     CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
-                     execution_context::concept::vector_evaluator<Evaluator>()),
+                     execution_context::concept::flat_evaluator<Evaluator>()),
     CONCEPT_REQUIRES(get_option<execution_mode::simd_t, Options>() ==
                          execution_mode::simd &&
                      get_option<execution_mode::temporal_t, Options>() ==
