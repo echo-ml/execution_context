@@ -11,11 +11,11 @@ using namespace echo::execution_context::intel_tbb;
 
 TEST_CASE("tbb_vector") {
   const int N = 16;
-  struct alignas(128)  {
+  struct alignas(128) {
     double data[N];
   } a_buffer, b_buffer;
-  double (&a)[N] = a_buffer.data;
-  double (&b)[N] = b_buffer.data;
+  double(&a)[N] = a_buffer.data;
+  double(&b)[N] = b_buffer.data;
   std::iota(std::begin(a), std::end(a), 0);
   auto eval = [&](index_t i) { return b[i] = a[i] * a[i]; };
   auto expr = make_expression(N, eval);
@@ -62,26 +62,20 @@ TEST_CASE("tbb_vector") {
 TEST_CASE("tbb_general_matrix") {
   const int M = 2;
   const int N = 3;
-  struct alignas(128)  {
+  struct alignas(128) {
     double data[M][N];
   } a_buffer, b_buffer;
-  double (&a)[M][N] = a_buffer.data;
-  double (&b)[M][N] = b_buffer.data;
-  std::iota(&a[0][0], &a[0][0] + M*N, 0);
+  double(&a)[M][N] = a_buffer.data;
+  double(&b)[M][N] = b_buffer.data;
+  std::iota(&a[0][0], &a[0][0] + M * N, 0);
   auto eval = [&](index_t i, index_t, index_t j, index_t) {
     return b[i][j] = a[i][j] * a[i][j];
   };
   auto expr = make_expression(M, N, eval);
   ExpressionExecuter executer;
-  SECTION("serial") {
-    executer(expr);
-  }
-  SECTION("parallel1") {
-    executer(execution_mode::parallel, expr);
-  }
-  SECTION("parallel1") {
-    executer(execution_mode::parallel_coarse, expr);
-  }
+  SECTION("serial") { executer(expr); }
+  SECTION("parallel1") { executer(execution_mode::parallel, expr); }
+  SECTION("parallel1") { executer(execution_mode::parallel_coarse, expr); }
   REQUIRE(b[0][0] == 0);
   REQUIRE(b[0][1] == 1);
   REQUIRE(b[0][2] == 4);
@@ -95,24 +89,18 @@ TEST_CASE("tbb_lower_half_matrix") {
   double a[N][N];
   double b[N][N];
   int count[N][N];
-  std::fill_n(&b[0][0], N*N, 0);
-  std::fill_n(&count[0][0], N*N, 0);
-  std::iota(&a[0][0], &a[0][0] + N*N, 0);
+  std::fill_n(&b[0][0], N * N, 0);
+  std::fill_n(&count[0][0], N * N, 0);
+  std::iota(&a[0][0], &a[0][0] + N * N, 0);
   auto eval = [&](index_t i, index_t, index_t j, index_t) {
     ++count[i][j];
     return b[i][j] = a[i][j] * a[i][j];
   };
   auto expr = make_expression<structure::lower_half>(N, N, eval);
   ExpressionExecuter executer;
-  SECTION("serial") {
-    executer(expr);
-  }
-  SECTION("parallel1") {
-    executer(execution_mode::parallel, expr);
-  }
-  SECTION("parallel2") {
-    executer(execution_mode::parallel_coarse, expr);
-  }
+  SECTION("serial") { executer(expr); }
+  SECTION("parallel1") { executer(execution_mode::parallel, expr); }
+  SECTION("parallel2") { executer(execution_mode::parallel_coarse, expr); }
   REQUIRE(b[0][0] == 0);
   REQUIRE(b[0][1] == 0);
   REQUIRE(b[1][0] == 4);
@@ -129,24 +117,18 @@ TEST_CASE("tbb_strict_lower_half_matrix") {
   double a[N][N];
   double b[N][N];
   int count[N][N];
-  std::fill_n(&b[0][0], N*N, 0);
-  std::fill_n(&count[0][0], N*N, 0);
-  std::iota(&a[0][0], &a[0][0] + N*N, 0);
+  std::fill_n(&b[0][0], N * N, 0);
+  std::fill_n(&count[0][0], N * N, 0);
+  std::iota(&a[0][0], &a[0][0] + N * N, 0);
   auto eval = [&](index_t i, index_t, index_t j, index_t) {
     ++count[i][j];
     return b[i][j] = a[i][j] * a[i][j];
   };
   auto expr = make_expression<structure::strict_lower_half>(N, N, eval);
   ExpressionExecuter executer;
-  SECTION("serial") {
-    executer(expr);
-  }
-  SECTION("parallel1") {
-    executer(execution_mode::parallel, expr);
-  }
-  SECTION("parallel2") {
-    executer(execution_mode::parallel_coarse, expr);
-  }
+  SECTION("serial") { executer(expr); }
+  SECTION("parallel1") { executer(execution_mode::parallel, expr); }
+  SECTION("parallel2") { executer(execution_mode::parallel_coarse, expr); }
   REQUIRE(b[0][0] == 0);
   REQUIRE(b[0][1] == 0);
   REQUIRE(b[1][0] == 4);
@@ -163,24 +145,18 @@ TEST_CASE("tbb_upper_half_matrix") {
   double a[N][N];
   double b[N][N];
   int count[N][N];
-  std::fill_n(&b[0][0], N*N, 0);
-  std::fill_n(&count[0][0], N*N, 0);
-  std::iota(&a[0][0], &a[0][0] + N*N, 0);
+  std::fill_n(&b[0][0], N * N, 0);
+  std::fill_n(&count[0][0], N * N, 0);
+  std::iota(&a[0][0], &a[0][0] + N * N, 0);
   auto eval = [&](index_t i, index_t, index_t j, index_t) {
     ++count[i][j];
     return b[i][j] = a[i][j] * a[i][j];
   };
   auto expr = make_expression<structure::upper_half>(N, N, eval);
   ExpressionExecuter executer;
-  SECTION("serial") {
-    executer(expr);
-  }
-  SECTION("parallel1") {
-    executer(execution_mode::parallel, expr);
-  }
-  SECTION("parallel2") {
-    executer(execution_mode::parallel_coarse, expr);
-  }
+  SECTION("serial") { executer(expr); }
+  SECTION("parallel1") { executer(execution_mode::parallel, expr); }
+  SECTION("parallel2") { executer(execution_mode::parallel_coarse, expr); }
   REQUIRE(b[0][0] == 0);
   REQUIRE(b[0][1] == 1);
   REQUIRE(b[1][0] == 0);
@@ -197,24 +173,18 @@ TEST_CASE("tbb_strict_upper_half_matrix") {
   double a[N][N];
   double b[N][N];
   int count[N][N];
-  std::fill_n(&b[0][0], N*N, 0);
-  std::fill_n(&count[0][0], N*N, 0);
-  std::iota(&a[0][0], &a[0][0] + N*N, 0);
+  std::fill_n(&b[0][0], N * N, 0);
+  std::fill_n(&count[0][0], N * N, 0);
+  std::iota(&a[0][0], &a[0][0] + N * N, 0);
   auto eval = [&](index_t i, index_t, index_t j, index_t) {
     ++count[i][j];
     return b[i][j] = a[i][j] * a[i][j];
   };
   auto expr = make_expression<structure::strict_upper_half>(N, N, eval);
   ExpressionExecuter executer;
-  SECTION("serial") {
-    executer(expr);
-  }
-  SECTION("parallel1") {
-    executer(execution_mode::parallel, expr);
-  }
-  SECTION("parallel2") {
-    executer(execution_mode::parallel_coarse, expr);
-  }
+  SECTION("serial") { executer(expr); }
+  SECTION("parallel1") { executer(execution_mode::parallel, expr); }
+  SECTION("parallel2") { executer(execution_mode::parallel_coarse, expr); }
   REQUIRE(b[0][0] == 0);
   REQUIRE(b[0][1] == 1);
   REQUIRE(b[1][0] == 0);
@@ -231,19 +201,15 @@ TEST_CASE("plus reduction") {
   double a[N];
   std::iota(std::begin(a), std::end(a), 0);
   auto expr = make_reduction_expression(N, [&](index_t i) { return a[i]; },
-    std::plus<double>(), 0.0);
+                                        std::plus<double>(), 0.0);
   double result = 0;
   ExpressionExecuter executer;
-  SECTION("serial") {
-    result = executer(expr);
-  }
-  SECTION("parallel1") {
-    result = executer(execution_mode::parallel, expr);
-  }
+  SECTION("serial") { result = executer(expr); }
+  SECTION("parallel1") { result = executer(execution_mode::parallel, expr); }
   SECTION("serial") {
     result = executer(execution_mode::parallel_coarse, expr);
   }
-  REQUIRE(result == 10);
+  CHECK(result == 10);
 }
 
 TEST_CASE("multiplies reduction") {
@@ -251,17 +217,31 @@ TEST_CASE("multiplies reduction") {
   double a[N];
   std::iota(std::begin(a), std::end(a), 1);
   auto expr = make_reduction_expression(N, [&](index_t i) { return a[i]; },
-    std::multiplies<double>(), 1.0);
+                                        std::multiplies<double>(), 1.0);
   double result = 0;
   ExpressionExecuter executer;
-  SECTION("serial") {
-    result = executer(expr);
-  }
-  SECTION("parallel1") {
-    result = executer(execution_mode::parallel, expr);
-  }
+  SECTION("serial") { result = executer(expr); }
+  SECTION("parallel1") { result = executer(execution_mode::parallel, expr); }
   SECTION("serial") {
     result = executer(execution_mode::parallel_coarse, expr);
   }
-  REQUIRE(result == 120);
+  CHECK(result == 120);
+}
+
+TEST_CASE("matrix plus reduction") {
+  const int M = 2, N = 3;
+  double a[M][N];
+  std::iota(&a[0][0], &a[0][0] + M * N, 0);
+  auto expr = make_reduction_expression(
+      make_k_shape(M, N), [&](index_t i, index_t, index_t j, index_t) {
+        return a[i][j];
+      }, std::plus<double>(), 0.0);
+  ExpressionExecuter executer;
+  double result = 0;
+  SECTION("serial") { result = executer(expr); }
+  SECTION("parallel1") { result = executer(execution_mode::parallel, expr); }
+  SECTION("parallel1") {
+    result = executer(execution_mode::parallel_coarse, expr);
+  }
+  CHECK(result == 15);
 }

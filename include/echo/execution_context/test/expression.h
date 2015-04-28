@@ -2,6 +2,7 @@
 
 #include <echo/k_array.h>
 #include <echo/execution_context/concept.h>
+#include <echo/type_traits.h>
 
 namespace echo {
 namespace execution_context {
@@ -68,19 +69,22 @@ auto make_expression(Extent1 extent1, Extent2 extent2,
 // ReductionExpression //
 /////////////////////////
 
-template<class Shape, class Mapper, class Reducer>
+template <class Shape, class Structure, class Mapper, class Reducer>
 class ReductionExpression : Shape {
-  using Scalar = decltype(std::declval<Mapper>()(0));
-public:
-  using value_type = decltype(std::declval<Mapper>()(0));
-  ReductionExpression(const Shape& shape, const Mapper& mapper, 
-    const Reducer& reducer, Scalar identity)
-    : Shape(shape), _mapper(mapper), _reducer(reducer), _identity(identity) {}
+  using Scalar = type_traits::function_return_type<
+    decltype(&Mapper::operator())>;
+
+ public:
+ using structure = Structure;
+  ReductionExpression(const Shape& shape, const Mapper& mapper,
+                      const Reducer& reducer, Scalar identity)
+      : Shape(shape), _mapper(mapper), _reducer(reducer), _identity(identity) {}
   const Shape& shape() const { return static_cast<const Shape&>(*this); }
   const Mapper& mapper() const { return _mapper; }
   const Reducer& reducer() const { return _reducer; }
   Scalar identity() const { return _identity; }
-private:
+
+ private:
   Mapper _mapper;
   Reducer _reducer;
   Scalar _identity;
@@ -90,23 +94,27 @@ private:
 // make_reduction_expression //
 ///////////////////////////////
 
-template <class Shape, class Mapper, class Reducer,
-          CONCEPT_REQUIRES(k_array::concept::shape<Shape>() &&
-                           concept::flat_evaluator<Mapper>()),
-          CONCEPT_REQUIRES(concept::reduction_expression<
-              ReductionExpression<Shape, Mapper, Reducer>>())>
-auto make_reduction_expression(const Shape& shape, const Mapper& mapper,
-                               const Reducer& reducer,
-                               std::result_of_t<Mapper(index_t)> identity) {
-  return ReductionExpression<Shape, Mapper, Reducer>(shape, mapper, reducer,
-                                                     identity);
+template <
+    class Shape, class Mapper, class Reducer,
+    CONCEPT_REQUIRES(k_array::concept::shape<Shape>()),
+    CONCEPT_REQUIRES(concept::flat_evaluator<Mapper>() ||
+                     concept::k_shaped_evaluator<
+                         shape_traits::num_dimensions<Shape>(), Mapper>()),
+    CONCEPT_REQUIRES(concept::reduction_expression<
+        ReductionExpression<Shape, structure::general, Mapper, Reducer>>())>
+auto make_reduction_expression(
+    const Shape& shape, const Mapper& mapper, const Reducer& reducer,
+    type_traits::function_return_type<decltype(&Mapper::operator())> identity) {
+  return ReductionExpression<Shape, structure::general, Mapper, Reducer>(
+      shape, mapper, reducer, identity);
 }
 
-template <class Extent, class Mapper, class Reducer,
-          CONCEPT_REQUIRES(k_array::concept::extent<Extent>() &&
-                           concept::flat_evaluator<Mapper>()),
-          CONCEPT_REQUIRES(concept::reduction_expression<ReductionExpression<
-              KShapeFromExtents<Extent>, Mapper, Reducer>>())>
+template <
+    class Extent, class Mapper, class Reducer,
+    CONCEPT_REQUIRES(k_array::concept::extent<Extent>() &&
+                     concept::flat_evaluator<Mapper>()),
+    CONCEPT_REQUIRES(concept::flat_reduction_expression<ReductionExpression<
+        KShapeFromExtents<Extent>, structure::general, Mapper, Reducer>>())>
 auto make_reduction_expression(Extent extent, const Mapper& mapper,
                                const Reducer& reducer,
                                std::result_of_t<Mapper(index_t)> identity) {
