@@ -5,6 +5,7 @@
 #include <echo/concept2.h>
 #include <echo/k_array.h>
 #include <echo/type_traits.h>
+#include <complex>
 
 namespace echo {
 namespace execution_context {
@@ -14,21 +15,11 @@ namespace concept {
 // scalar //
 ////////////
 
-namespace detail {
-namespace concept {
-struct Scalar : Concept {
-  template <class T>
-  auto require(T&& x)
-      -> list<echo::concept::regular<T>(), same<T, decltype(-x)>(),
-              same<T, decltype(x + x)>(), same<T, decltype(x - x)>(),
-              same<T, decltype(x* x)>(), same<T, decltype(x / x)>()>;
-};
-}
-}
-
 template <class T>
 constexpr bool scalar() {
-  return models<detail::concept::Scalar, T>();
+  return std::is_integral<T>::value || std::is_floating_point<T>::value ||
+         std::is_same<T, std::complex<float>>::value ||
+         std::is_same<T, std::complex<double>>::value;
 }
 
 ////////////////////
@@ -76,6 +67,15 @@ struct KShapedEvaluator : Concept {
 template <int K, class T>
 constexpr bool k_shaped_evaluator() {
   return models<detail::concept::KShapedEvaluator<K>, T>();
+}
+
+//////////////////////////
+// compatible_evaluator //
+//////////////////////////
+
+template <int K, class T>
+constexpr bool k_compatible_evaluator() {
+  return flat_evaluator<T>() || k_shaped_evaluator<K, T>();
 }
 
 //////////////////////
@@ -230,8 +230,7 @@ struct FlatReductionExpression : Concept {
       // same<uncvref_t<decltype(expression.identity())>,
       //      evaluator_traits::value_type<decltype(expression.mapper())>>()
       valid<decltype(expression.identity())>(),
-      valid<decltype(expression.reducer())>()
-  >;
+      valid<decltype(expression.reducer())>()>;
 };
 }
 }
@@ -262,8 +261,7 @@ struct ShapedReductionExpression : Concept {
       // same<uncvref_t<decltype(expression.identity())>,
       //      evaluator_traits::value_type<decltype(expression.mapper())>>()
       valid<decltype(expression.identity())>(),
-      valid<decltype(expression.reducer())>()
-  >;
+      valid<decltype(expression.reducer())>()>;
 };
 }
 }

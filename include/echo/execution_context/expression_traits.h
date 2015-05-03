@@ -2,6 +2,7 @@
 
 #include <echo/concept2.h>
 #include <echo/type_traits.h>
+#include <echo/k_array.h>
 
 namespace echo {
 namespace evaluator_traits {
