@@ -113,7 +113,7 @@ template <
     class Extent, class Mapper, class Reducer,
     CONCEPT_REQUIRES(k_array::concept::extent<Extent>() &&
                      concept::flat_evaluator<Mapper>()),
-    CONCEPT_REQUIRES(concept::flat_reduction_expression<ReductionExpression<
+    CONCEPT_REQUIRES(concept::flat_evaluator_reduction_expression<ReductionExpression<
         KShapeFromExtents<Extent>, structure::general, Mapper, Reducer>>())>
 auto make_reduction_expression(Extent extent, const Mapper& mapper,
                                const Reducer& reducer,

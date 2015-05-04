@@ -126,13 +126,13 @@ constexpr bool structure() {
                              echo::execution_context::structure::base>::value;
 }
 
-/////////////////////
-// flat_expression //
-/////////////////////
+///////////////////////////////
+// flat_evaluator_expression //
+///////////////////////////////
 
 namespace detail {
 namespace concept {
-struct FlatExpression : Concept {
+struct FlatEvaluatorExpression : Concept {
   template <class T>
   auto require(T&& expression) -> list<
       std::is_copy_constructible<T>::value,
@@ -143,17 +143,17 @@ struct FlatExpression : Concept {
 }
 
 template <class T>
-constexpr bool flat_expression() {
-  return models<detail::concept::FlatExpression, T>();
+constexpr bool flat_evaluator_expression() {
+  return models<detail::concept::FlatEvaluatorExpression, T>();
 }
 
-///////////////////////
-// shaped_expression //
-///////////////////////
+/////////////////////////////////
+// shaped_evaluator_expression //
+/////////////////////////////////
 
 namespace detail {
 namespace concept {
-struct ShapedExpression : Concept {
+struct ShapedEvaluatorExpression : Concept {
   template <class T>
   auto require(T&& expression) -> list<
       std::is_copy_constructible<T>::value,
@@ -167,8 +167,8 @@ struct ShapedExpression : Concept {
 }
 
 template <class T>
-constexpr bool shaped_expression() {
-  return models<detail::concept::ShapedExpression, T>();
+constexpr bool shaped_evaluator_expression() {
+  return models<detail::concept::ShapedEvaluatorExpression, T>();
 }
 
 //////////////////////////////
@@ -180,7 +180,7 @@ namespace concept {
 struct ShapedMatrixExpression : Concept {
   template <class T>
   auto require(T&& expression) -> list<
-      shaped_expression<T>(),
+      shaped_evaluator_expression<T>(),
       shape_traits::num_dimensions<decltype(expression.shape())>() == 2>;
 };
 }
@@ -212,13 +212,13 @@ constexpr bool half_matrix_expression() {
   return models<detail::concept::HalfMatrixExpression, T>();
 }
 
-///////////////////////////////
-// flat_reduction_expression //
-///////////////////////////////
+/////////////////////////////////////////
+// flat_evaluator_reduction_expression //
+/////////////////////////////////////////
 
 namespace detail {
 namespace concept {
-struct FlatReductionExpression : Concept {
+struct FlatEvaluatorReductionExpression : Concept {
   template <class T>
   auto require(T&& expression) -> list<
       std::is_copy_constructible<T>::value,
@@ -236,17 +236,17 @@ struct FlatReductionExpression : Concept {
 }
 
 template <class T>
-constexpr bool flat_reduction_expression() {
-  return models<detail::concept::FlatReductionExpression, T>();
+constexpr bool flat_evaluator_reduction_expression() {
+  return models<detail::concept::FlatEvaluatorReductionExpression, T>();
 }
 
-/////////////////////////////////
-// shaped_reduction_expression //
-/////////////////////////////////
+///////////////////////////////////////////
+// shaped_evaluator_reduction_expression //
+///////////////////////////////////////////
 
 namespace detail {
 namespace concept {
-struct ShapedReductionExpression : Concept {
+struct ShapedEvaluatorReductionExpression : Concept {
   template <class T>
   auto require(T&& expression) -> list<
       std::is_copy_constructible<T>::value,
@@ -267,8 +267,8 @@ struct ShapedReductionExpression : Concept {
 }
 
 template <class T>
-constexpr bool shaped_reduction_expression() {
-  return models<detail::concept::ShapedReductionExpression, T>();
+constexpr bool shaped_evaluator_reduction_expression() {
+  return models<detail::concept::ShapedEvaluatorReductionExpression, T>();
 }
 
 //////////////////////////
@@ -277,7 +277,7 @@ constexpr bool shaped_reduction_expression() {
 
 template <class T>
 constexpr bool reduction_expression() {
-  return flat_reduction_expression<T>() || shaped_reduction_expression<T>();
+  return flat_evaluator_reduction_expression<T>() || shaped_evaluator_reduction_expression<T>();
 }
 
 ////////////////
@@ -286,7 +286,7 @@ constexpr bool reduction_expression() {
 
 template <class T>
 constexpr bool expression() {
-  return flat_expression<T>() || shaped_expression<T>();
+  return flat_evaluator_expression<T>() || shaped_evaluator_expression<T>();
 }
 }
 }

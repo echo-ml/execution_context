@@ -14,6 +14,10 @@ using value_type = uncvref_t<type_traits::function_return_type<decltype(
 namespace expression_traits {
 
 template <class Expression>
+using evaluator_type =
+    uncvref_t<decltype(std::declval<Expression>().evaluator())>;
+
+template <class Expression>
 using value_type = evaluator_traits::value_type<decltype(
     std::declval<Expression>().evaluator())>;
 

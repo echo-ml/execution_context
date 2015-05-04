@@ -56,7 +56,7 @@ class ExpressionExecuter {
   template <class Options, class Expression,
             CONCEPT_REQUIRES(
                 option::concept::option_list<Options>() &&
-                execution_context::concept::flat_expression<Expression>() &&
+                execution_context::concept::flat_evaluator_expression<Expression>() &&
                 get_option<execution_mode::parallel_t, Options>() ==
                     execution_mode::serial)>
   void execute(Options options, const Expression& expression) const {
@@ -67,7 +67,7 @@ class ExpressionExecuter {
   template <class Options, class Expression,
             CONCEPT_REQUIRES(
                 option::concept::option_list<Options>() &&
-                execution_context::concept::flat_expression<Expression>() &&
+                execution_context::concept::flat_evaluator_expression<Expression>() &&
                 get_option<execution_mode::parallel_t, Options>() ==
                     execution_mode::parallel_fine)>
   void execute(Options options, const Expression& expression) const {
@@ -82,7 +82,7 @@ class ExpressionExecuter {
   template <class Options, class Expression,
             CONCEPT_REQUIRES(
                 option::concept::option_list<Options>() &&
-                execution_context::concept::flat_expression<Expression>() &&
+                execution_context::concept::flat_evaluator_expression<Expression>() &&
                 get_option<execution_mode::parallel_t, Options>() ==
                     execution_mode::parallel_coarse)>
   void execute(Options options, const Expression& expression) const {
@@ -103,7 +103,7 @@ class ExpressionExecuter {
                 option::concept::option_list<Options>() &&
                 get_option<execution_mode::parallel_t, Options>() ==
                     execution_mode::parallel_fine &&
-                execution_context::concept::shaped_expression<Expression>()),
+                execution_context::concept::shaped_evaluator_expression<Expression>()),
             CONCEPT_REQUIRES(
                 std::is_convertible<expression_traits::structure<Expression>,
                                     structure::general>::value)>
@@ -122,7 +122,7 @@ class ExpressionExecuter {
                 option::concept::option_list<Options>() &&
                 get_option<execution_mode::parallel_t, Options>() ==
                     execution_mode::parallel_coarse &&
-                execution_context::concept::shaped_expression<Expression>()),
+                execution_context::concept::shaped_evaluator_expression<Expression>()),
             CONCEPT_REQUIRES(
                 std::is_convertible<expression_traits::structure<Expression>,
                                     structure::general>::value)>
@@ -141,7 +141,7 @@ class ExpressionExecuter {
                 option::concept::option_list<Options>() &&
                 get_option<execution_mode::parallel_t, Options>() ==
                     execution_mode::serial &&
-                execution_context::concept::shaped_expression<Expression>()),
+                execution_context::concept::shaped_evaluator_expression<Expression>()),
             CONCEPT_REQUIRES(
                 std::is_convertible<expression_traits::structure<Expression>,
                                     structure::general>::value)>
@@ -327,7 +327,7 @@ class ExpressionExecuter {
       class Options, class Expression,
       CONCEPT_REQUIRES(
           option::concept::option_list<Options>() &&
-          execution_context::concept::flat_reduction_expression<Expression>() &&
+          execution_context::concept::flat_evaluator_reduction_expression<Expression>() &&
           get_option<execution_mode::parallel_t, Options>() ==
               execution_mode::parallel_fine)>
   auto execute(Options options, const Expression& expression) const {
@@ -346,7 +346,7 @@ class ExpressionExecuter {
       class Options, class Expression,
       CONCEPT_REQUIRES(
           option::concept::option_list<Options>() &&
-          execution_context::concept::flat_reduction_expression<Expression>() &&
+          execution_context::concept::flat_evaluator_reduction_expression<Expression>() &&
           get_option<execution_mode::parallel_t, Options>() ==
               execution_mode::parallel_coarse)>
   auto execute(Options options, const Expression& expression) const {
@@ -366,7 +366,7 @@ class ExpressionExecuter {
       class Options, class Expression,
       CONCEPT_REQUIRES(
           option::concept::option_list<Options>() &&
-          execution_context::concept::flat_reduction_expression<Expression>() &&
+          execution_context::concept::flat_evaluator_reduction_expression<Expression>() &&
           get_option<execution_mode::parallel_t, Options>() ==
               execution_mode::serial)>
   auto execute(Options options, const Expression& expression) const {
@@ -378,7 +378,7 @@ class ExpressionExecuter {
       class Options, class Expression,
       CONCEPT_REQUIRES(
           option::concept::option_list<Options>() &&
-          execution_context::concept::flat_reduction_expression<Expression>())>
+          execution_context::concept::flat_evaluator_reduction_expression<Expression>())>
   auto map_reduce(
       Options options, index_t first, index_t last,
       uncvref_t<decltype(std::declval<Expression>().identity())> init,
@@ -399,7 +399,7 @@ class ExpressionExecuter {
   template <
       class Options, class Expression,
       CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
-                       execution_context::concept::shaped_reduction_expression<
+                       execution_context::concept::shaped_evaluator_reduction_expression<
                            Expression>() &&
                        get_option<execution_mode::parallel_t, Options>() ==
                            execution_mode::parallel_fine)>
@@ -419,7 +419,7 @@ class ExpressionExecuter {
   template <
       class Options, class Expression,
       CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
-                       execution_context::concept::shaped_reduction_expression<
+                       execution_context::concept::shaped_evaluator_reduction_expression<
                            Expression>() &&
                        get_option<execution_mode::parallel_t, Options>() ==
                            execution_mode::parallel_coarse)>
@@ -440,7 +440,7 @@ class ExpressionExecuter {
   template <
       class Options, class Expression,
       CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
-                       execution_context::concept::shaped_reduction_expression<
+                       execution_context::concept::shaped_evaluator_reduction_expression<
                            Expression>() &&
                        get_option<execution_mode::parallel_t, Options>() ==
                            execution_mode::serial)>
@@ -453,7 +453,7 @@ class ExpressionExecuter {
       class Options, class Scalar, class Expression,
       CONCEPT_REQUIRES(
           option::concept::option_list<Options>() &&
-          execution_context::concept::shaped_reduction_expression<Expression>()
+          execution_context::concept::shaped_evaluator_reduction_expression<Expression>()
           // check is broken with intel compiler
           // && std::is_same<Scalar, reduction_expression_traits::value_type<
           //                          Expression>>::value
