@@ -42,7 +42,9 @@ template <
                          execution_mode::nonaligned)>
 void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
 #pragma simd
-  for (IndexInteger i = a; i < b; ++i) evaluator(i);
+  for (IndexInteger i = a; i < b; ++i) 
+#pragma forceinline recursive
+    evaluator(i);
 }
 
 // temporal
@@ -58,7 +60,9 @@ template <
                          execution_mode::nonaligned)>
 void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
 #pragma vector nontemporal
-  for (IndexInteger i = a; i < b; ++i) evaluator(i);
+  for (IndexInteger i = a; i < b; ++i) 
+#pragma forceinline recursive
+    evaluator(i);
 }
 
 // simd, nontemporal
@@ -75,7 +79,9 @@ template <
 void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
 #pragma simd
 #pragma vector nontemporal
-  for (IndexInteger i = a; i < b; ++i) evaluator(i);
+  for (IndexInteger i = a; i < b; ++i) 
+#pragma forceinline recursive
+    evaluator(i);
 }
 
 // simd, aligned
@@ -92,7 +98,9 @@ template <
 void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
 #pragma simd
 #pragma vector aligned
-  for (IndexInteger i = a; i < b; ++i) evaluator(i);
+  for (IndexInteger i = a; i < b; ++i) 
+#pragma forceinline recursive
+    evaluator(i);
 }
 
 // simd, nontemporal, aligned
@@ -110,7 +118,9 @@ void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
 #pragma simd
 #pragma vector aligned
 #pragma vector nontemporal
-  for (IndexInteger i = a; i < b; ++i) evaluator(i);
+  for (IndexInteger i = a; i < b; ++i) 
+#pragma forceinline recursive
+    evaluator(i);
 }
 }
 }

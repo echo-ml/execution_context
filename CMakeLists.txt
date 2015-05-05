@@ -10,6 +10,14 @@ set(ECHOEXECUTIONCONTEXT_VERSION
     "${ECHOEXECUTIONCONTEXT_MINOR_VERSION}."
     "${ECHOEXECUTIONCONTEXT_PATCH_VERSION}")
 
+if(WIN32 AND NOT CYGWIN)
+  set(DEF_INSTALL_CMAKE_DIR CMake)
+else()
+  set(DEF_INSTALL_CMAKE_DIR lib/cmake/EchoExecutionContext)
+endif()
+set(INSTALL_CMAKE_DIR ${DEF_INSTALL_CMAKE_DIR} CACHE PATH
+  "Installation directory for CMake files")
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 enable_testing()
@@ -39,6 +47,11 @@ file(GLOB headers-execution_context
   "${CMAKE_CURRENT_SOURCE_DIR}/include/echo/execution_context/*.h"
 )
 
+file(GLOB headers-execution_context-tbb
+  RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/echo/execution_context/tbb/*.h"
+)
+
 file(GLOB unittests
   RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
   "${CMAKE_CURRENT_SOURCE_DIR}/unittest/*_test.cpp"
@@ -62,7 +75,19 @@ target_link_libraries(benchmark ${MKL_LIBRARIES})
 
 configure_file(config/EchoExecutionContextConfig.cmake.in
   "${PROJECT_BINARY_DIR}/config/EchoExecutionContextConfig.cmake" @ONLY)
+configure_file(config/EchoExecutionContextConfigVersion.cmake.in
+  "${PROJECT_BINARY_DIR}/config/EchoExecutionContextConfigVersion.cmake" @ONLY)
 
 install(FILES ${headers} DESTINATION include/echo)
 install(FILES ${headers-execution_context} DESTINATION include/echo/execution_context)
+install(FILES ${headers-execution_context-tbb} DESTINATION
+  include/echo/execution_context/tbb)
 
+
+configure_file(cmake/EchoExecutionContextConfig.cmake.in
+  "${PROJECT_BINARY_DIR}/EchoExecutionContextConfig.cmake" @ONLY)
+
+install(FILES 
+  "${PROJECT_BINARY_DIR}/config/EchoExecutionContextConfig.cmake"
+  "${PROJECT_BINARY_DIR}/config/EchoExecutionContextConfigVersion.cmake"
+  DESTINATION "${INSTALL_CMAKE_DIR}") 
