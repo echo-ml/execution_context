@@ -10,6 +10,8 @@ enum class temporal_t { yes, no };
 enum class parallel_t { serial, fine, coarse };
 enum class aligned_t { yes, no };
 
+enum class inline_t { force, suggest, nosuggest };
+
 constexpr option::Option<simd_t, simd_t::yes> simd{};
 constexpr option::Option<simd_t, simd_t::no> nosimd{};
 
@@ -23,6 +25,10 @@ constexpr option::Option<parallel_t, parallel_t::coarse> parallel_coarse{};
 
 constexpr option::Option<aligned_t, aligned_t::yes> aligned{};
 constexpr option::Option<aligned_t, aligned_t::no> nonaligned{};
+
+constexpr option::Option<inline_t, inline_t::force> force_inline{};
+constexpr option::Option<inline_t, inline_t::suggest> suggest_inline{};
+constexpr option::Option<inline_t, inline_t::nosuggest> nosuggest_inline{};
 
 }
 }

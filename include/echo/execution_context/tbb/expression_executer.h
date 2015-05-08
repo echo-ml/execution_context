@@ -13,7 +13,8 @@ namespace intel_tbb {
 class ExpressionExecuter {
   static constexpr auto kDefaultOptions =
       execution_mode::simd | execution_mode::serial |
-      execution_mode::nontemporal | execution_mode::nonaligned;
+      execution_mode::temporal | execution_mode::nonaligned |
+      execution_mode::suggest_inline;
 
   static constexpr std::size_t kCoarseGrainularity = 100'000;
 
