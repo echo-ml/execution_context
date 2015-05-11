@@ -321,7 +321,7 @@ class ExpressionExecuter {
   }
 
   ///////////////////////////////
-  // falt-reduction-expression //
+  // flat-reduction-expression //
   ///////////////////////////////
 
   template <
