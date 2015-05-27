@@ -1,6 +1,7 @@
 #pragma once
 
 #include <echo/execution_context/structure.h>
+#include <echo/execution_context/allocation_backend.h>
 #include <echo/execution_context/expression_traits.h>
 #include <echo/concept2.h>
 #include <echo/k_array.h>
@@ -277,7 +278,8 @@ constexpr bool shaped_evaluator_reduction_expression() {
 
 template <class T>
 constexpr bool reduction_expression() {
-  return flat_evaluator_reduction_expression<T>() || shaped_evaluator_reduction_expression<T>();
+  return flat_evaluator_reduction_expression<T>() ||
+         shaped_evaluator_reduction_expression<T>();
 }
 
 ////////////////
@@ -287,6 +289,69 @@ constexpr bool reduction_expression() {
 template <class T>
 constexpr bool expression() {
   return flat_evaluator_expression<T>() || shaped_evaluator_expression<T>();
+}
+
+/////////////////////////
+// expression_executer //
+/////////////////////////
+
+namespace detail {
+namespace concept {
+
+struct TestEvaluator1 {
+  double operator()(index_t) const;
+};
+
+struct TestEvaluator2 {
+  double operator()(index_t, index_t, index_t, index_t) const;
+};
+
+struct TestExpression1 {
+  using structure = structure::general;
+  KShape<2, 2> shape() const;
+  TestEvaluator1 evaluator() const;
+};
+
+struct TestExpression2 {
+  using structure = structure::general;
+  KShape<2, 2> shape() const;
+  TestEvaluator2 evaluator() const;
+};
+
+struct ExpressionExecuter : Concept {
+  template <class T>
+  auto require(T&& executer)
+      -> list<valid<decltype(executer(TestExpression1()))>(),
+              valid<decltype(executer(TestExpression2()))>()>;
+};
+}
+}
+
+template <class T>
+constexpr bool expression_executer() {
+  return models<detail::concept::ExpressionExecuter, T>();
+}
+
+////////////////////////
+// allocation_backend //
+////////////////////////
+
+namespace detail {
+namespace concept {
+struct AllocationBackend : Concept {
+  template <class T>
+  auto require(T&& allocation_backend)
+      -> list<echo::concept::allocator<
+                  decltype(make_allocator<double>(allocation_backend))>(),
+              echo::concept::allocator<decltype(
+                  make_aligned_allocator<double>(allocation_backend))>()>;
+};
+}
+}
+
+template <class T>
+constexpr bool allocation_backend() {
+  return models<detail::concept::AllocationBackend, T>();
 }
 }
 }

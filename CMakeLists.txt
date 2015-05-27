@@ -52,6 +52,11 @@ file(GLOB headers-execution_context-tbb
   "${CMAKE_CURRENT_SOURCE_DIR}/include/echo/execution_context/tbb/*.h"
 )
 
+file(GLOB headers-execution_context-mkl
+  RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/echo/execution_context/mkl/*.h"
+)
+
 file(GLOB unittests
   RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
   "${CMAKE_CURRENT_SOURCE_DIR}/unittest/*_test.cpp"
@@ -82,6 +87,8 @@ install(FILES ${headers} DESTINATION include/echo)
 install(FILES ${headers-execution_context} DESTINATION include/echo/execution_context)
 install(FILES ${headers-execution_context-tbb} DESTINATION
   include/echo/execution_context/tbb)
+install(FILES ${headers-execution_context-mkl} DESTINATION
+  include/echo/execution_context/mkl)
 
 
 configure_file(cmake/EchoExecutionContextConfig.cmake.in

@@ -20,6 +20,9 @@ TEST_CASE("tbb_vector") {
   auto eval = [&](index_t i) { return b[i] = a[i] * a[i]; };
   auto expr = make_expression(N, eval);
   ExpressionExecuter executer;
+
+  CHECK(execution_context::concept::expression_executer<ExpressionExecuter>());
+
   SECTION("default") {
     executer(expr);
     REQUIRE(b[0] == a[0] * a[0]);
