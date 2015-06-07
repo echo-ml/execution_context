@@ -10,7 +10,9 @@ enum class uplo_t { upper, lower };
 
 struct general : base {};
 
-template<uplo_t Uplo, bool Strict> struct half : base {
+struct square {};
+
+template<uplo_t Uplo, bool Strict> struct half : base, square {
   static const uplo_t uplo = Uplo;
   static const bool strict = Strict;
 };

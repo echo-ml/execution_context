@@ -1,4 +1,4 @@
-#include <echo/execution_context/test/expression.h>
+#include <echo/execution_context/expression.h>
 #include <echo/execution_context/tbb/expression_executer.h>
 #include <touchstone/touchstone.h>
 #include <numeric>
@@ -8,7 +8,6 @@
 
 using namespace echo;
 using namespace echo::execution_context;
-using namespace echo::execution_context::test;
 using namespace echo::execution_context::intel_tbb;
 
 BENCHMARK_SET("tbb_half_matrix", NumTrials(1), LinearRange(1, 10'000, 1'000),

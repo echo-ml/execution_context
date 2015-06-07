@@ -4,6 +4,7 @@
 #include <echo/execution_context/tbb/blocked_range.h>
 #include <echo/execution_context/concept.h>
 #include <echo/execution_context/option.h>
+#include <echo/execution_context/expression.h>
 #include <tbb/tbb.h>
 
 namespace echo {
@@ -12,9 +13,8 @@ namespace intel_tbb {
 
 class ExpressionExecuter {
   static constexpr auto kDefaultOptions =
-      execution_mode::simd | execution_mode::serial |
-      execution_mode::temporal | execution_mode::nonaligned |
-      execution_mode::suggest_inline;
+      execution_mode::simd | execution_mode::serial | execution_mode::temporal |
+      execution_mode::nonaligned | execution_mode::suggest_inline;
 
   static constexpr std::size_t kCoarseGrainularity = 100'000;
 
@@ -50,27 +50,33 @@ class ExpressionExecuter {
   }
 
  private:
-  ////////////
-  // vector //
-  ////////////
+  ////////////////////
+  // flat_evaluator //
+  ////////////////////
 
-  template <class Options, class Expression,
-            CONCEPT_REQUIRES(
-                option::concept::option_list<Options>() &&
-                execution_context::concept::flat_evaluator_expression<Expression>() &&
-                get_option<execution_mode::parallel_t, Options>() ==
-                    execution_mode::serial)>
+  template <
+      class Options, class Expression,
+      CONCEPT_REQUIRES(
+          option::concept::option_list<Options>() &&
+          execution_context::concept::flat_evaluator_expression<Expression>() &&
+          get_option<execution_mode::parallel_t, Options>() ==
+              execution_mode::serial),
+      CONCEPT_REQUIRES(std::is_convertible<
+          expression_traits::structure<Expression>, structure::general>::value)>
   void execute(Options options, const Expression& expression) const {
     detail::for_(options, 0, get_num_elements(expression),
                  expression.evaluator());
   }
 
-  template <class Options, class Expression,
-            CONCEPT_REQUIRES(
-                option::concept::option_list<Options>() &&
-                execution_context::concept::flat_evaluator_expression<Expression>() &&
-                get_option<execution_mode::parallel_t, Options>() ==
-                    execution_mode::parallel_fine)>
+  template <
+      class Options, class Expression,
+      CONCEPT_REQUIRES(
+          option::concept::option_list<Options>() &&
+          execution_context::concept::flat_evaluator_expression<Expression>() &&
+          get_option<execution_mode::parallel_t, Options>() ==
+              execution_mode::parallel_fine),
+      CONCEPT_REQUIRES(std::is_convertible<
+          expression_traits::structure<Expression>, structure::general>::value)>
   void execute(Options options, const Expression& expression) const {
     tbb::parallel_for(
         tbb::blocked_range<index_t>(0, get_num_elements(expression)),
@@ -80,12 +86,15 @@ class ExpressionExecuter {
         });
   }
 
-  template <class Options, class Expression,
-            CONCEPT_REQUIRES(
-                option::concept::option_list<Options>() &&
-                execution_context::concept::flat_evaluator_expression<Expression>() &&
-                get_option<execution_mode::parallel_t, Options>() ==
-                    execution_mode::parallel_coarse)>
+  template <
+      class Options, class Expression,
+      CONCEPT_REQUIRES(
+          option::concept::option_list<Options>() &&
+          execution_context::concept::flat_evaluator_expression<Expression>() &&
+          get_option<execution_mode::parallel_t, Options>() ==
+              execution_mode::parallel_coarse),
+      CONCEPT_REQUIRES(std::is_convertible<
+          expression_traits::structure<Expression>, structure::general>::value)>
   void execute(Options options, const Expression& expression) const {
     tbb::parallel_for(tbb::blocked_range<index_t>(
                           0, get_num_elements(expression), kCoarseGrainularity),
@@ -95,19 +104,37 @@ class ExpressionExecuter {
                       });
   }
 
+  template <
+      class Options, class Expression,
+      CONCEPT_REQUIRES(
+          option::concept::option_list<Options>() &&
+          execution_context::concept::flat_evaluator_expression<Expression>()),
+      CONCEPT_REQUIRES(std::is_convertible<
+          expression_traits::structure<Expression>, structure::square>::value)>
+  void execute(Options options, const Expression& expression) const {
+    auto evaluator = expression.evaluator();
+    auto shaped_evaluator = [=](index_t i, index_t m, index_t j, index_t n) {
+      return evaluator(i + n * j);
+    };
+    auto shaped_expression =
+        make_expression<expression_traits::structure<Expression>>(
+            expression.shape(), shaped_evaluator);
+    this->execute(options, shaped_expression);
+  }
+
   ///////////////////////////////
   // general-shaped-expression //
   ///////////////////////////////
 
-  template <class Options, class Expression,
-            CONCEPT_REQUIRES(
-                option::concept::option_list<Options>() &&
-                get_option<execution_mode::parallel_t, Options>() ==
-                    execution_mode::parallel_fine &&
-                execution_context::concept::shaped_evaluator_expression<Expression>()),
-            CONCEPT_REQUIRES(
-                std::is_convertible<expression_traits::structure<Expression>,
-                                    structure::general>::value)>
+  template <
+      class Options, class Expression,
+      CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
+                       get_option<execution_mode::parallel_t, Options>() ==
+                           execution_mode::parallel_fine &&
+                       execution_context::concept::shaped_evaluator_expression<
+                           Expression>()),
+      CONCEPT_REQUIRES(std::is_convertible<
+          expression_traits::structure<Expression>, structure::general>::value)>
   void execute(Options options, const Expression& expression) const {
     const int NumDimensions = expression_traits::num_dimensions<Expression>();
     tbb::parallel_for(
@@ -118,15 +145,15 @@ class ExpressionExecuter {
         });
   }
 
-  template <class Options, class Expression,
-            CONCEPT_REQUIRES(
-                option::concept::option_list<Options>() &&
-                get_option<execution_mode::parallel_t, Options>() ==
-                    execution_mode::parallel_coarse &&
-                execution_context::concept::shaped_evaluator_expression<Expression>()),
-            CONCEPT_REQUIRES(
-                std::is_convertible<expression_traits::structure<Expression>,
-                                    structure::general>::value)>
+  template <
+      class Options, class Expression,
+      CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
+                       get_option<execution_mode::parallel_t, Options>() ==
+                           execution_mode::parallel_coarse &&
+                       execution_context::concept::shaped_evaluator_expression<
+                           Expression>()),
+      CONCEPT_REQUIRES(std::is_convertible<
+          expression_traits::structure<Expression>, structure::general>::value)>
   void execute(Options options, const Expression& expression) const {
     const int NumDimensions = expression_traits::num_dimensions<Expression>();
     tbb::parallel_for(
@@ -137,15 +164,15 @@ class ExpressionExecuter {
         });
   }
 
-  template <class Options, class Expression,
-            CONCEPT_REQUIRES(
-                option::concept::option_list<Options>() &&
-                get_option<execution_mode::parallel_t, Options>() ==
-                    execution_mode::serial &&
-                execution_context::concept::shaped_evaluator_expression<Expression>()),
-            CONCEPT_REQUIRES(
-                std::is_convertible<expression_traits::structure<Expression>,
-                                    structure::general>::value)>
+  template <
+      class Options, class Expression,
+      CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
+                       get_option<execution_mode::parallel_t, Options>() ==
+                           execution_mode::serial &&
+                       execution_context::concept::shaped_evaluator_expression<
+                           Expression>()),
+      CONCEPT_REQUIRES(std::is_convertible<
+          expression_traits::structure<Expression>, structure::general>::value)>
   void execute(Options options, const Expression& expression) const {
     const int NumDimensions = expression_traits::num_dimensions<Expression>();
     execute(options, std::make_index_sequence<NumDimensions>(),
@@ -324,13 +351,13 @@ class ExpressionExecuter {
   // flat-reduction-expression //
   ///////////////////////////////
 
-  template <
-      class Options, class Expression,
-      CONCEPT_REQUIRES(
-          option::concept::option_list<Options>() &&
-          execution_context::concept::flat_evaluator_reduction_expression<Expression>() &&
-          get_option<execution_mode::parallel_t, Options>() ==
-              execution_mode::parallel_fine)>
+  template <class Options, class Expression,
+            CONCEPT_REQUIRES(
+                option::concept::option_list<Options>() &&
+                execution_context::concept::flat_evaluator_reduction_expression<
+                    Expression>() &&
+                get_option<execution_mode::parallel_t, Options>() ==
+                    execution_mode::parallel_fine)>
   auto execute(Options options, const Expression& expression) const {
     using Scalar = uncvref_t<decltype(std::declval<Expression>().identity())>;
     return tbb::parallel_reduce(
@@ -343,13 +370,13 @@ class ExpressionExecuter {
         expression.reducer());
   }
 
-  template <
-      class Options, class Expression,
-      CONCEPT_REQUIRES(
-          option::concept::option_list<Options>() &&
-          execution_context::concept::flat_evaluator_reduction_expression<Expression>() &&
-          get_option<execution_mode::parallel_t, Options>() ==
-              execution_mode::parallel_coarse)>
+  template <class Options, class Expression,
+            CONCEPT_REQUIRES(
+                option::concept::option_list<Options>() &&
+                execution_context::concept::flat_evaluator_reduction_expression<
+                    Expression>() &&
+                get_option<execution_mode::parallel_t, Options>() ==
+                    execution_mode::parallel_coarse)>
   auto execute(Options options, const Expression& expression) const {
     using Scalar = uncvref_t<decltype(std::declval<Expression>().identity())>;
     return tbb::parallel_reduce(
@@ -363,23 +390,23 @@ class ExpressionExecuter {
         expression.reducer());
   }
 
-  template <
-      class Options, class Expression,
-      CONCEPT_REQUIRES(
-          option::concept::option_list<Options>() &&
-          execution_context::concept::flat_evaluator_reduction_expression<Expression>() &&
-          get_option<execution_mode::parallel_t, Options>() ==
-              execution_mode::serial)>
+  template <class Options, class Expression,
+            CONCEPT_REQUIRES(
+                option::concept::option_list<Options>() &&
+                execution_context::concept::flat_evaluator_reduction_expression<
+                    Expression>() &&
+                get_option<execution_mode::parallel_t, Options>() ==
+                    execution_mode::serial)>
   auto execute(Options options, const Expression& expression) const {
     return map_reduce(options, 0, get_num_elements(expression),
                       expression.identity(), expression);
   }
 
-  template <
-      class Options, class Expression,
-      CONCEPT_REQUIRES(
-          option::concept::option_list<Options>() &&
-          execution_context::concept::flat_evaluator_reduction_expression<Expression>())>
+  template <class Options, class Expression,
+            CONCEPT_REQUIRES(
+                option::concept::option_list<Options>() &&
+                execution_context::concept::flat_evaluator_reduction_expression<
+                    Expression>())>
   auto map_reduce(
       Options options, index_t first, index_t last,
       uncvref_t<decltype(std::declval<Expression>().identity())> init,
@@ -397,13 +424,13 @@ class ExpressionExecuter {
   // shaped-reduction-expression //
   /////////////////////////////////
 
-  template <
-      class Options, class Expression,
-      CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
-                       execution_context::concept::shaped_evaluator_reduction_expression<
-                           Expression>() &&
-                       get_option<execution_mode::parallel_t, Options>() ==
-                           execution_mode::parallel_fine)>
+  template <class Options, class Expression,
+            CONCEPT_REQUIRES(
+                option::concept::option_list<Options>() &&
+                execution_context::concept::
+                    shaped_evaluator_reduction_expression<Expression>() &&
+                get_option<execution_mode::parallel_t, Options>() ==
+                    execution_mode::parallel_fine)>
   auto execute(Options options, const Expression& expression) const {
     using Scalar = uncvref_t<decltype(std::declval<Expression>().identity())>;
     constexpr int NumDimensions =
@@ -417,13 +444,13 @@ class ExpressionExecuter {
         expression.reducer());
   }
 
-  template <
-      class Options, class Expression,
-      CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
-                       execution_context::concept::shaped_evaluator_reduction_expression<
-                           Expression>() &&
-                       get_option<execution_mode::parallel_t, Options>() ==
-                           execution_mode::parallel_coarse)>
+  template <class Options, class Expression,
+            CONCEPT_REQUIRES(
+                option::concept::option_list<Options>() &&
+                execution_context::concept::
+                    shaped_evaluator_reduction_expression<Expression>() &&
+                get_option<execution_mode::parallel_t, Options>() ==
+                    execution_mode::parallel_coarse)>
   auto execute(Options options, const Expression& expression) const {
     using Scalar = uncvref_t<decltype(std::declval<Expression>().identity())>;
     constexpr int NumDimensions =
@@ -438,13 +465,13 @@ class ExpressionExecuter {
         expression.reducer());
   }
 
-  template <
-      class Options, class Expression,
-      CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
-                       execution_context::concept::shaped_evaluator_reduction_expression<
-                           Expression>() &&
-                       get_option<execution_mode::parallel_t, Options>() ==
-                           execution_mode::serial)>
+  template <class Options, class Expression,
+            CONCEPT_REQUIRES(
+                option::concept::option_list<Options>() &&
+                execution_context::concept::
+                    shaped_evaluator_reduction_expression<Expression>() &&
+                get_option<execution_mode::parallel_t, Options>() ==
+                    execution_mode::serial)>
   auto execute(Options options, const Expression& expression) const {
     return map_reduce(options, make_blocked_range(expression.shape()),
                       expression.identity(), expression);
@@ -454,7 +481,8 @@ class ExpressionExecuter {
       class Options, class Scalar, class Expression,
       CONCEPT_REQUIRES(
           option::concept::option_list<Options>() &&
-          execution_context::concept::shaped_evaluator_reduction_expression<Expression>()
+          execution_context::concept::shaped_evaluator_reduction_expression<
+              Expression>()
           // check is broken with intel compiler
           // && std::is_same<Scalar, reduction_expression_traits::value_type<
           //                          Expression>>::value

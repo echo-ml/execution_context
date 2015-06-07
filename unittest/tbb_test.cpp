@@ -1,4 +1,4 @@
-#include <echo/execution_context/test/expression.h>
+#include <echo/execution_context/expression.h>
 #include <echo/execution_context/tbb/expression_executer.h>
 #include <echo/test.h>
 #include <numeric>
@@ -6,7 +6,6 @@
 
 using namespace echo;
 using namespace echo::execution_context;
-using namespace echo::execution_context::test;
 using namespace echo::execution_context::intel_tbb;
 
 TEST_CASE("tbb_vector") {
@@ -113,6 +112,26 @@ TEST_CASE("tbb_lower_half_matrix") {
   REQUIRE(count[0][1] == 0);
   REQUIRE(count[1][0] == 1);
   REQUIRE(count[1][1] == 1);
+}
+
+TEST_CASE("tbb_flat_lower_half_matrix") {
+  const int N = 2;
+  double a[N*N] = {1, 2, 3, 4};
+  double b[N*N] = {3, 2, 9, 1};
+  double c[N*N] = {0, 0, 0, 0};
+
+  auto expr = make_expression<structure::lower_half>(N, N,
+    [&](index_t i) {
+      return c[i] = a[i] + b[i];
+    });
+
+  ExpressionExecuter executer;
+  executer(expr);
+
+  CHECK(c[0] == 4);
+  CHECK(c[1] == 4);
+  CHECK(c[2] == 0);
+  CHECK(c[3] == 5);
 }
 
 TEST_CASE("tbb_strict_lower_half_matrix") {

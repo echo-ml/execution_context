@@ -54,6 +54,9 @@ auto evaluator_result(std::index_sequence<Indexes...>,
                       const Evaluator& evaluator)
     -> decltype(evaluator((Indexes, index_t(0))...));
 
+// hack to work around bug with intel c++ compiler
+auto evaluator_result(...) -> std::nullptr_t;
+
 template <int K>
 struct KShapedEvaluator : Concept {
   template <class T>
@@ -65,9 +68,13 @@ struct KShapedEvaluator : Concept {
 }
 }
 
+// rewrite concept in this weird way to avoid a bug with intel c++ compiler
 template <int K, class T>
 constexpr bool k_shaped_evaluator() {
-  return models<detail::concept::KShapedEvaluator<K>, T>();
+  using EvaluatorResult = decltype(detail::concept::evaluator_result(
+      std::make_index_sequence<2 * K>(), std::declval<const T>()));
+  return std::is_copy_constructible<T>::value &&
+         scalar<uncvref_t<EvaluatorResult>>();
 }
 
 //////////////////////////

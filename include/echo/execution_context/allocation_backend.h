@@ -1,6 +1,7 @@
 #pragma once
 
 #include <echo/memory.h>
+#include <boost/align/aligned_allocator_adaptor.hpp>
 
 namespace echo {
 namespace execution_context {
@@ -23,7 +24,7 @@ auto make_allocator(const AllocationBackend<Allocator>&) {
 
 template <class T, template <class> class Allocator>
 auto make_aligned_allocator(const AllocationBackend<Allocator>&) {
-  return memory::SimdAllocator<Allocator<T>>();
+  return boost::alignment::aligned_allocator_adaptor<Allocator<T>, ECHO_SIMD_ALIGNMENT>();
 }
 }
 }

@@ -458,13 +458,13 @@ auto make_blocked_range_impl(std::index_sequence<IndexFirst, IndexesRest...>,
                              const Continuation& continuation,
                              const Shape& shape) {
   auto extent = get_extent<IndexFirst>(shape);
+  BlockedRange<index_t> blocked_range(0, extent, grainsize);
   return make_blocked_range_impl(
       std::index_sequence<IndexesRest...>(),
       grainsize / get_extent<IndexFirst>(shape) +
           (grainsize % get_extent<IndexFirst>(shape) > 0),
       [&](const auto&... blocked_ranges) {
-        return continuation(BlockedRange<index_t>(0, extent, grainsize),
-                            blocked_ranges...);
+        return continuation(blocked_range, blocked_ranges...);
       },
       shape);
 }
@@ -474,10 +474,11 @@ auto make_blocked_range_impl(std::index_sequence<IndexFirst, IndexesRest...>,
 template <class Shape, CONCEPT_REQUIRES(k_array::concept::shape<Shape>())>
 auto make_blocked_range(const Shape& shape, std::size_t grainsize) {
   const int N = shape_traits::num_dimensions<Shape>();
+  using KBlockedRangeType = KBlockedRange<N, index_t>;
   return detail::blocked_range::make_blocked_range_impl(
       std::make_index_sequence<N>(),
       grainsize, [](const auto&... blocked_ranges) {
-        return KBlockedRange<N, index_t>(blocked_ranges...);
+        return KBlockedRangeType(blocked_ranges...);
       }, shape);
 }
 }
