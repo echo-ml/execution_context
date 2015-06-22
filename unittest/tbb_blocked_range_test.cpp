@@ -161,7 +161,7 @@ TEST_CASE("tbb_k_blocked_range_split3") {
 
 TEST_CASE("tbb_blocked_range_from_shape") {
   SECTION("no grainularity") {
-    auto b1 = make_blocked_range(make_k_shape(10, 5));
+    auto b1 = make_blocked_range(make_dimensionality(10, 5));
     auto s1 = project<0>(b1);
     auto s2 = project<1>(b1);
 
@@ -174,7 +174,7 @@ TEST_CASE("tbb_blocked_range_from_shape") {
     CHECK(s2.grainsize() == 1);
   }
   SECTION("with grainularity") {
-    auto b1 = make_blocked_range(make_k_shape(10, 5), 5);
+    auto b1 = make_blocked_range(make_dimensionality(10, 5), 5);
     auto s1 = project<0>(b1);
     auto s2 = project<1>(b1);
 

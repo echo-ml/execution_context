@@ -28,8 +28,8 @@ template <
                          execution_mode::nonaligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::nosuggest_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
-  for (IndexInteger i = a; i < b; ++i) evaluator(i);
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
+  for (index_t i = a; i < b; ++i) evaluator(i);
 }
 
 // simd
@@ -45,9 +45,9 @@ template <
                          execution_mode::nonaligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::nosuggest_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
 #pragma simd
-  for (IndexInteger i = a; i < b; ++i) evaluator(i);
+  for (index_t i = a; i < b; ++i) evaluator(i);
 }
 
 // temporal
@@ -63,9 +63,9 @@ template <
                          execution_mode::nonaligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::nosuggest_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
 #pragma vector nontemporal
-  for (IndexInteger i = a; i < b; ++i) evaluator(i);
+  for (index_t i = a; i < b; ++i) evaluator(i);
 }
 
 // simd, nontemporal
@@ -81,10 +81,10 @@ template <
                          execution_mode::nonaligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::nosuggest_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
 #pragma simd
 #pragma vector nontemporal
-  for (IndexInteger i = a; i < b; ++i) evaluator(i);
+  for (index_t i = a; i < b; ++i) evaluator(i);
 }
 
 // simd, aligned
@@ -100,10 +100,10 @@ template <
                          execution_mode::aligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::nosuggest_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
 #pragma simd
 #pragma vector aligned
-  for (IndexInteger i = a; i < b; ++i) evaluator(i);
+  for (index_t i = a; i < b; ++i) evaluator(i);
 }
 
 // simd, nontemporal, aligned
@@ -119,11 +119,11 @@ template <
                          execution_mode::aligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::nosuggest_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
 #pragma simd
 #pragma vector aligned
 #pragma vector nontemporal
-  for (IndexInteger i = a; i < b; ++i) evaluator(i);
+  for (index_t i = a; i < b; ++i) evaluator(i);
 }
 
 // suggest_inline
@@ -139,8 +139,8 @@ template <
                          execution_mode::nonaligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::suggest_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
-  for (IndexInteger i = a; i < b; ++i)
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
+  for (index_t i = a; i < b; ++i)
 #pragma inline recursive
     evaluator(i);
 }
@@ -158,9 +158,9 @@ template <
                          execution_mode::nonaligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::suggest_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
 #pragma simd
-  for (IndexInteger i = a; i < b; ++i)
+  for (index_t i = a; i < b; ++i)
 #pragma inline recursive
     evaluator(i);
 }
@@ -178,9 +178,9 @@ template <
                          execution_mode::nonaligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::suggest_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
 #pragma vector nontemporal
-  for (IndexInteger i = a; i < b; ++i)
+  for (index_t i = a; i < b; ++i)
 #pragma inline recursive
     evaluator(i);
 }
@@ -198,10 +198,10 @@ template <
                          execution_mode::nonaligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::suggest_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
 #pragma simd
 #pragma vector nontemporal
-  for (IndexInteger i = a; i < b; ++i)
+  for (index_t i = a; i < b; ++i)
 #pragma inline recursive
     evaluator(i);
 }
@@ -219,10 +219,10 @@ template <
                          execution_mode::aligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::suggest_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
 #pragma simd
 #pragma vector aligned
-  for (IndexInteger i = a; i < b; ++i)
+  for (index_t i = a; i < b; ++i)
 #pragma inline recursive
     evaluator(i);
 }
@@ -240,11 +240,11 @@ template <
                          execution_mode::aligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::suggest_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
 #pragma simd
 #pragma vector aligned
 #pragma vector nontemporal
-  for (IndexInteger i = a; i < b; ++i)
+  for (index_t i = a; i < b; ++i)
 #pragma inline recursive
     evaluator(i);
 }
@@ -262,8 +262,8 @@ template <
                          execution_mode::nonaligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::force_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
-  for (IndexInteger i = a; i < b; ++i)
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
+  for (index_t i = a; i < b; ++i)
 #pragma forceinline recursive
     evaluator(i);
 }
@@ -281,9 +281,9 @@ template <
                          execution_mode::nonaligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::force_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
 #pragma simd
-  for (IndexInteger i = a; i < b; ++i)
+  for (index_t i = a; i < b; ++i)
 #pragma forceinline recursive
     evaluator(i);
 }
@@ -301,9 +301,9 @@ template <
                          execution_mode::nonaligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::force_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
 #pragma vector nontemporal
-  for (IndexInteger i = a; i < b; ++i)
+  for (index_t i = a; i < b; ++i)
 #pragma forceinline recursive
     evaluator(i);
 }
@@ -321,10 +321,10 @@ template <
                          execution_mode::nonaligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::force_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
 #pragma simd
 #pragma vector nontemporal
-  for (IndexInteger i = a; i < b; ++i)
+  for (index_t i = a; i < b; ++i)
 #pragma forceinline recursive
     evaluator(i);
 }
@@ -342,10 +342,10 @@ template <
                          execution_mode::aligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::force_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
 #pragma simd
 #pragma vector aligned
-  for (IndexInteger i = a; i < b; ++i)
+  for (index_t i = a; i < b; ++i)
 #pragma forceinline recursive
     evaluator(i);
 }
@@ -363,11 +363,11 @@ template <
                          execution_mode::aligned &&
                      get_option<execution_mode::inline_t, Options>() ==
                          execution_mode::force_inline)>
-void for_(Options, IndexInteger a, IndexInteger b, const Evaluator& evaluator) {
+void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
 #pragma simd
 #pragma vector aligned
 #pragma vector nontemporal
-  for (IndexInteger i = a; i < b; ++i)
+  for (index_t i = a; i < b; ++i)
 #pragma forceinline recursive
     evaluator(i);
 }

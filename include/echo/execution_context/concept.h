@@ -3,7 +3,7 @@
 #include <echo/execution_context/structure.h>
 #include <echo/execution_context/allocation_backend.h>
 #include <echo/execution_context/expression_traits.h>
-#include <echo/concept2.h>
+#include <echo/concept.h>
 #include <echo/k_array.h>
 #include <echo/type_traits.h>
 #include <complex>
@@ -43,9 +43,9 @@ constexpr bool flat_evaluator() {
   return models<detail::concept::FlatEvaluator, T>();
 }
 
-////////////////////////
-// k_shaped_evaluator //
-////////////////////////
+/////////////////
+// k_evaluator //
+/////////////////
 
 namespace detail {
 namespace concept {
@@ -58,7 +58,7 @@ auto evaluator_result(std::index_sequence<Indexes...>,
 auto evaluator_result(...) -> std::nullptr_t;
 
 template <int K>
-struct KShapedEvaluator : Concept {
+struct KEvaluator : Concept {
   template <class T>
   auto require(T&& evaluator)
       -> list<std::is_copy_constructible<T>::value,
@@ -70,7 +70,7 @@ struct KShapedEvaluator : Concept {
 
 // rewrite concept in this weird way to avoid a bug with intel c++ compiler
 template <int K, class T>
-constexpr bool k_shaped_evaluator() {
+constexpr bool k_evaluator() {
   using EvaluatorResult = decltype(detail::concept::evaluator_result(
       std::make_index_sequence<2 * K>(), std::declval<const T>()));
   return std::is_copy_constructible<T>::value &&
@@ -83,7 +83,7 @@ constexpr bool k_shaped_evaluator() {
 
 template <int K, class T>
 constexpr bool k_compatible_evaluator() {
-  return flat_evaluator<T>() || k_shaped_evaluator<K, T>();
+  return flat_evaluator<T>() || k_evaluator<K, T>();
 }
 
 //////////////////////
@@ -92,7 +92,7 @@ constexpr bool k_compatible_evaluator() {
 
 template <class T>
 constexpr bool matrix_evaluator() {
-  return k_shaped_evaluator<2, T>();
+  return k_evaluator<2, T>();
 }
 
 ///////////////
@@ -142,10 +142,11 @@ namespace detail {
 namespace concept {
 struct FlatEvaluatorExpression : Concept {
   template <class T>
-  auto require(T&& expression) -> list<
-      std::is_copy_constructible<T>::value,
-      k_array::concept::shape<uncvref_t<decltype(expression.shape())>>(),
-      flat_evaluator<uncvref_t<decltype(expression.evaluator())>>()>;
+  auto require(T&& expression)
+      -> list<std::is_copy_constructible<T>::value,
+              k_array::concept::dimensionality<
+                  uncvref_t<decltype(expression.dimensionality())>>(),
+              flat_evaluator<uncvref_t<decltype(expression.evaluator())>>()>;
 };
 }
 }
@@ -155,48 +156,47 @@ constexpr bool flat_evaluator_expression() {
   return models<detail::concept::FlatEvaluatorExpression, T>();
 }
 
-/////////////////////////////////
-// shaped_evaluator_expression //
-/////////////////////////////////
+////////////////////////////
+// k_evaluator_expression //
+////////////////////////////
 
 namespace detail {
 namespace concept {
-struct ShapedEvaluatorExpression : Concept {
+struct KEvaluatorExpression : Concept {
   template <class T>
-  auto require(T&& expression) -> list<
-      std::is_copy_constructible<T>::value,
-      k_array::concept::shape<uncvref_t<decltype(expression.shape())>>(),
-      structure<expression_traits::structure<T>>(),
-      k_shaped_evaluator<
-          shape_traits::num_dimensions<decltype(expression.shape())>(),
-          uncvref_t<decltype(expression.evaluator())>>()>;
+  auto require(T&& expression)
+      -> list<std::is_copy_constructible<T>::value,
+              k_array::concept::dimensionality<
+                  uncvref_t<decltype(expression.dimensionality())>>(),
+              structure<expression_traits::structure<T>>(),
+              k_evaluator<dimensionality_traits::num_dimensions<uncvref_t<
+                              decltype(expression.dimensionality())>>(),
+                          uncvref_t<decltype(expression.evaluator())>>()>;
 };
 }
 }
 
 template <class T>
-constexpr bool shaped_evaluator_expression() {
-  return models<detail::concept::ShapedEvaluatorExpression, T>();
+constexpr bool k_evaluator_expression() {
+  return models<detail::concept::KEvaluatorExpression, T>();
 }
-
-//////////////////////////////
-// shaped_matrix_expression //
-//////////////////////////////
 
 namespace detail {
 namespace concept {
-struct ShapedMatrixExpression : Concept {
+template <int K>
+struct KEvaluatorExpression_ : Concept {
   template <class T>
-  auto require(T&& expression) -> list<
-      shaped_evaluator_expression<T>(),
-      shape_traits::num_dimensions<decltype(expression.shape())>() == 2>;
+  auto require(T&& expression)
+      -> list<k_evaluator_expression<T>(),
+              dimensionality_traits::num_dimensions<
+                  uncvref_t<decltype(expression.dimensionality())>>() == K>;
 };
 }
 }
 
-template <class T>
-constexpr bool shaped_matrix_expression() {
-  return models<detail::concept::ShapedMatrixExpression, T>();
+template <int K, class T>
+constexpr bool k_evaluator_expression() {
+  return models<detail::concept::KEvaluatorExpression_<K>, T>();
 }
 
 namespace detail {
@@ -208,7 +208,7 @@ void match_half_structure(structure::half<Uplo, Strict>);
 struct HalfMatrixExpression : Concept {
   template <class T>
   auto require(T&& expression)
-      -> list<shaped_matrix_expression<T>(),
+      -> list<k_evaluator_expression<2, T>(),
               valid<decltype(
                   match_half_structure(expression_traits::structure<T>()))>()>;
 };
@@ -230,7 +230,8 @@ struct FlatEvaluatorReductionExpression : Concept {
   template <class T>
   auto require(T&& expression) -> list<
       std::is_copy_constructible<T>::value,
-      k_array::concept::shape<uncvref_t<decltype(expression.shape())>>(),
+      k_array::concept::dimensionality<
+          uncvref_t<decltype(expression.dimensionality())>>(),
       flat_evaluator<uncvref_t<decltype(expression.mapper())>>(),
       // broken with intel compiler
       // reducer<uncvref_t<decltype(expression.identity())>,
@@ -248,20 +249,21 @@ constexpr bool flat_evaluator_reduction_expression() {
   return models<detail::concept::FlatEvaluatorReductionExpression, T>();
 }
 
-///////////////////////////////////////////
-// shaped_evaluator_reduction_expression //
-///////////////////////////////////////////
+//////////////////////////////////////
+// k_evaluator_reduction_expression //
+//////////////////////////////////////
 
 namespace detail {
 namespace concept {
-struct ShapedEvaluatorReductionExpression : Concept {
+struct KEvaluatorReductionExpression : Concept {
   template <class T>
   auto require(T&& expression) -> list<
       std::is_copy_constructible<T>::value,
-      k_array::concept::shape<uncvref_t<decltype(expression.shape())>>(),
-      k_shaped_evaluator<
-          shape_traits::num_dimensions<decltype(expression.shape())>(),
-          uncvref_t<decltype(expression.mapper())>>(),
+      k_array::concept::dimensionality<
+          uncvref_t<decltype(expression.dimensionality())>>(),
+      k_evaluator<dimensionality_traits::num_dimensions<
+                      uncvref_t<decltype(expression.dimensionality())>>(),
+                  uncvref_t<decltype(expression.mapper())>>(),
       structure<expression_traits::structure<T>>(),
       // broken with intel compiler
       // reducer<uncvref_t<decltype(expression.identity())>,
@@ -275,8 +277,26 @@ struct ShapedEvaluatorReductionExpression : Concept {
 }
 
 template <class T>
-constexpr bool shaped_evaluator_reduction_expression() {
-  return models<detail::concept::ShapedEvaluatorReductionExpression, T>();
+constexpr bool k_evaluator_reduction_expression() {
+  return models<detail::concept::KEvaluatorReductionExpression, T>();
+}
+
+namespace detail {
+namespace concept {
+template <int K>
+struct KEvaluatorReductionExpression_ : Concept {
+  template <class T>
+  auto require(T&& expression)
+      -> list<k_evaluator_reduction_expression<T>(),
+              dimensionality_traits::num_dimensions<
+                  uncvref_t<decltype(expression.dimensionality())>>() == K>;
+};
+}
+}
+
+template <int K, class T>
+constexpr bool k_evaluator_reduction_expression() {
+  return models<detail::concept::KEvaluatorReductionExpression_<K>, T>();
 }
 
 //////////////////////////
@@ -286,7 +306,7 @@ constexpr bool shaped_evaluator_reduction_expression() {
 template <class T>
 constexpr bool reduction_expression() {
   return flat_evaluator_reduction_expression<T>() ||
-         shaped_evaluator_reduction_expression<T>();
+         k_evaluator_reduction_expression<T>();
 }
 
 ////////////////
@@ -295,7 +315,7 @@ constexpr bool reduction_expression() {
 
 template <class T>
 constexpr bool expression() {
-  return flat_evaluator_expression<T>() || shaped_evaluator_expression<T>();
+  return flat_evaluator_expression<T>() || k_evaluator_expression<T>();
 }
 
 /////////////////////////
@@ -315,13 +335,13 @@ struct TestEvaluator2 {
 
 struct TestExpression1 {
   using structure = structure::general;
-  KShape<2, 2> shape() const;
+  const DimensionalityC<2, 2>& dimensionality() const;
   TestEvaluator1 evaluator() const;
 };
 
 struct TestExpression2 {
   using structure = structure::general;
-  KShape<2, 2> shape() const;
+  const DimensionalityC<2, 2>& dimensionality() const;
   TestEvaluator2 evaluator() const;
 };
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <echo/concept2.h>
+#include <echo/concept.h>
 #include <echo/k_array.h>
 #include <tbb/tbb.h>
 #include <cassert>
@@ -197,10 +197,9 @@ void split_impl(const SplitFactor& split_factor,
                left_blocked_ranges, right_blocked_ranges);
 }
 
-template <
-    class SplitFactor, class... Extents,
-    CONCEPT_REQUIRES(concept::split_factor<SplitFactor>() &&
-                     const_algorithm::and_c<concept::extent<Extents>()...>())>
+template <class SplitFactor, class... Extents,
+          CONCEPT_REQUIRES(concept::split_factor<SplitFactor>() &&
+                           and_c<concept::extent<Extents>()...>())>
 void split(const SplitFactor& split_factor,
            std::tuple<BlockedRange<Extents>...>& left_blocked_ranges,
            std::tuple<BlockedRange<Extents>...>& right_blocked_ranges) {
@@ -230,17 +229,17 @@ auto get_extent_from_index(ExtentFirst, ExtentsRest... extents_rest) {
 }
 
 template <int I, class... Extents,
-          CONCEPT_REQUIRES(
-              sizeof...(Extents) % 2 == 0 && I < sizeof...(Extents) / 2 &&
-              const_algorithm::and_c<concept::extent<Extents>()...>())>
+          CONCEPT_REQUIRES(sizeof...(Extents) % 2 == 0 &&
+                           I < sizeof...(Extents) / 2 &&
+                           and_c<concept::extent<Extents>()...>())>
 auto get_first(Extents... extents) {
   return get_extent_from_index<2 * I>(extents...);
 }
 
 template <int I, class... Extents,
-          CONCEPT_REQUIRES(
-              sizeof...(Extents) % 2 == 0 && I < sizeof...(Extents) / 2 &&
-              const_algorithm::and_c<concept::extent<Extents>()...>())>
+          CONCEPT_REQUIRES(sizeof...(Extents) % 2 == 0 &&
+                           I < sizeof...(Extents) / 2 &&
+                           and_c<concept::extent<Extents>()...>())>
 auto get_last(Extents... extents) {
   return get_extent_from_index<2 * I + 1>(extents...);
 }
@@ -261,8 +260,8 @@ bool or_impl(bool bool_first, BoolsRest... bools_rest) {
   return bool_first || or_impl(bools_rest...);
 }
 
-template <class... Bools, CONCEPT_REQUIRES(const_algorithm::and_c<
-                              std::is_convertible<Bools, bool>::value...>())>
+template <class... Bools,
+          CONCEPT_REQUIRES(and_c<std::is_convertible<Bools, bool>::value...>())>
 bool or_(Bools... bools) {
   return or_impl(bools...);
 }
@@ -280,8 +279,8 @@ bool is_empty_impl(std::index_sequence<Indexes...>,
                    const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
   return or_(std::get<Indexes>(blocked_ranges).empty()...);
 }
-template <class... Extents, CONCEPT_REQUIRES(const_algorithm::and_c<
-                                concept::extent<Extents>()...>())>
+template <class... Extents,
+          CONCEPT_REQUIRES(and_c<concept::extent<Extents>()...>())>
 bool is_empty(const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
   return is_empty_impl(std::index_sequence_for<Extents...>(), blocked_ranges);
 }
@@ -300,8 +299,8 @@ bool is_divisible_impl(
     const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
   return or_(std::get<Indexes>(blocked_ranges).is_divisible()...);
 }
-template <class... Extents, CONCEPT_REQUIRES(const_algorithm::and_c<
-                                concept::extent<Extents>()...>())>
+template <class... Extents,
+          CONCEPT_REQUIRES(and_c<concept::extent<Extents>()...>())>
 bool is_divisible(const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
   return is_divisible_impl(std::index_sequence_for<Extents...>(),
                            blocked_ranges);
@@ -316,17 +315,15 @@ bool is_divisible(const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
 template <int N, class... Extents>
 class KBlockedRange {
   static_assert(sizeof...(Extents) > 0 && sizeof...(Extents) <= N, "");
-  static_assert(const_algorithm::and_c<concept::extent<Extents>()...>(),
-                "invalid extent type");
+  static_assert(and_c<concept::extent<Extents>()...>(), "invalid extent type");
 
  public:
   static const bool is_splittable_in_proportion = true;
 
   KBlockedRange() = default;
   template <class... ExtentsInit,
-            CONCEPT_REQUIRES(
-                sizeof...(ExtentsInit) == 2 * N &&
-                const_algorithm::and_c<concept::extent<ExtentsInit>()...>())>
+            CONCEPT_REQUIRES(sizeof...(ExtentsInit) == 2 * N &&
+                             and_c<concept::extent<ExtentsInit>()...>())>
   KBlockedRange(ExtentsInit... extents)
       : KBlockedRange(std::make_index_sequence<N>(), extents...) {}
   template <class SplitFactor,
@@ -340,8 +337,7 @@ class KBlockedRange {
   template <class... BlockedRanges,
             CONCEPT_REQUIRES(
                 sizeof...(BlockedRanges) == N &&
-                const_algorithm::and_c<
-                    concept::blocked_range<BlockedRanges>()...>() &&
+                and_c<concept::blocked_range<BlockedRanges>()...>() &&
                 std::is_constructible<
                     detail::blocked_range::BlockedRangeTuple<N, Extents...>,
                     const BlockedRanges&...>::value)>
@@ -370,10 +366,9 @@ class KBlockedRange {
   detail::blocked_range::BlockedRangeTuple<N, Extents...> _blocked_ranges;
 };
 
-template <
-    int I, int N, class... Extents,
-    CONCEPT_REQUIRES(I >= 0 && I < N &&
-                     const_algorithm::and_c<concept::extent<Extents>()...>())>
+template <int I, int N, class... Extents,
+          CONCEPT_REQUIRES(I >= 0 && I < N &&
+                           and_c<concept::extent<Extents>()...>())>
 const auto& project(const KBlockedRange<N, Extents...>& k_blocked_range) {
   return k_blocked_range.template project<I>();
 }
@@ -391,10 +386,9 @@ auto make_blocked_range(Extent first, Extent last, std::size_t grainsize = 1) {
 
 namespace detail {
 namespace blocked_range {
-template <
-    std::size_t... Indexes, class... Extents,
-    CONCEPT_REQUIRES(sizeof...(Indexes)*2 == sizeof...(Extents) &&
-                     const_algorithm::and_c<concept::extent<Extents>()...>())>
+template <std::size_t... Indexes, class... Extents,
+          CONCEPT_REQUIRES(sizeof...(Indexes)*2 == sizeof...(Extents) &&
+                           and_c<concept::extent<Extents>()...>())>
 auto make_blocked_range_impl(std::index_sequence<Indexes...>,
                              Extents... extents) {
   return KBlockedRange<sizeof...(Indexes),
@@ -403,83 +397,86 @@ auto make_blocked_range_impl(std::index_sequence<Indexes...>,
 }
 }
 
-template <
-    class... Extents,
-    CONCEPT_REQUIRES(const_algorithm::and_c<concept::extent<Extents>()...>() &&
-                     sizeof...(Extents) % 2 == 0)>
+template <class... Extents,
+          CONCEPT_REQUIRES(and_c<concept::extent<Extents>()...>() &&
+                           sizeof...(Extents) % 2 == 0)>
 auto make_blocked_range(Extents... extents) {
   return detail::blocked_range::make_blocked_range_impl(
       std::make_index_sequence<sizeof...(Extents) / 2>(), extents...);
 }
 
-template <
-    class... Extents,
-    CONCEPT_REQUIRES(sizeof...(Extents) > 1 &&
-                     const_algorithm::and_c<concept::extent<Extents>()...>())>
+template <class... Extents,
+          CONCEPT_REQUIRES(sizeof...(Extents) > 1 &&
+                           and_c<concept::extent<Extents>()...>())>
 auto make_blocked_range(const BlockedRange<Extents>&... blocked_ranges) {
   return KBlockedRange<sizeof...(Extents), Extents...>(blocked_ranges...);
 }
 
 namespace detail {
 namespace blocked_range {
-template <std::size_t... Indexes, class Shape,
-          CONCEPT_REQUIRES(k_array::concept::shape<Shape>()),
-          CONCEPT_REQUIRES(shape_traits::num_dimensions<Shape>() ==
-                           sizeof...(Indexes))>
+template <std::size_t... Indexes, class Dimensionality,
+          CONCEPT_REQUIRES(k_array::concept::dimensionality<Dimensionality>()),
+          CONCEPT_REQUIRES(dimensionality_traits::num_dimensions<
+                               Dimensionality>() == sizeof...(Indexes))>
 auto make_blocked_range_impl(std::index_sequence<Indexes...>,
-                             const Shape& shape) {
+                             const Dimensionality& dimensionality) {
   return KBlockedRange<sizeof...(Indexes), index_t>(
-      BlockedRange<index_t>(0, get_extent<Indexes>(shape))...);
+      BlockedRange<index_t>(0, get_extent<Indexes>(dimensionality))...);
 }
 }
 }
 
-template <class Shape, CONCEPT_REQUIRES(k_array::concept::shape<Shape>())>
-auto make_blocked_range(const Shape& shape) {
+template <class Dimensionality,
+          CONCEPT_REQUIRES(k_array::concept::dimensionality<Dimensionality>())>
+auto make_blocked_range(const Dimensionality& dimensionality) {
   return detail::blocked_range::make_blocked_range_impl(
-      std::make_index_sequence<shape_traits::num_dimensions<Shape>()>(), shape);
+      std::make_index_sequence<
+          dimensionality_traits::num_dimensions<Dimensionality>()>(),
+      dimensionality);
 }
 
 namespace detail {
 namespace blocked_range {
-template <class Continuation, class Shape,
-          CONCEPT_REQUIRES(k_array::concept::shape<Shape>())>
+template <class Continuation, class Dimensionality,
+          CONCEPT_REQUIRES(k_array::concept::dimensionality<Dimensionality>())>
 auto make_blocked_range_impl(std::index_sequence<>, std::size_t,
                              const Continuation& continuation,
-                             const Shape& shape) {
+                             const Dimensionality& dimensionality) {
   return continuation();
 }
 
 template <std::size_t IndexFirst, std::size_t... IndexesRest,
-          class Continuation, class Shape,
-          CONCEPT_REQUIRES(k_array::concept::shape<Shape>())>
+          class Continuation, class Dimensionality,
+          CONCEPT_REQUIRES(k_array::concept::dimensionality<Dimensionality>())>
 auto make_blocked_range_impl(std::index_sequence<IndexFirst, IndexesRest...>,
                              std::size_t grainsize,
                              const Continuation& continuation,
-                             const Shape& shape) {
-  auto extent = get_extent<IndexFirst>(shape);
+                             const Dimensionality& dimensionality) {
+  auto extent = get_extent<IndexFirst>(dimensionality);
   BlockedRange<index_t> blocked_range(0, extent, grainsize);
   return make_blocked_range_impl(
       std::index_sequence<IndexesRest...>(),
-      grainsize / get_extent<IndexFirst>(shape) +
-          (grainsize % get_extent<IndexFirst>(shape) > 0),
+      grainsize / get_extent<IndexFirst>(dimensionality) +
+          (grainsize % get_extent<IndexFirst>(dimensionality) > 0),
       [&](const auto&... blocked_ranges) {
         return continuation(blocked_range, blocked_ranges...);
       },
-      shape);
+      dimensionality);
 }
 }
 }
 
-template <class Shape, CONCEPT_REQUIRES(k_array::concept::shape<Shape>())>
-auto make_blocked_range(const Shape& shape, std::size_t grainsize) {
-  const int N = shape_traits::num_dimensions<Shape>();
+template <class Dimensionality,
+          CONCEPT_REQUIRES(k_array::concept::dimensionality<Dimensionality>())>
+auto make_blocked_range(const Dimensionality& dimensionality,
+                        std::size_t grainsize) {
+  const int N = dimensionality_traits::num_dimensions<Dimensionality>();
   using KBlockedRangeType = KBlockedRange<N, index_t>;
   return detail::blocked_range::make_blocked_range_impl(
       std::make_index_sequence<N>(),
       grainsize, [](const auto&... blocked_ranges) {
         return KBlockedRangeType(blocked_ranges...);
-      }, shape);
+      }, dimensionality);
 }
 }
 }

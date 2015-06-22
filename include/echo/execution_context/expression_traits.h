@@ -1,6 +1,6 @@
 #pragma once
 
-#include <echo/concept2.h>
+#include <echo/concept.h>
 #include <echo/type_traits.h>
 #include <echo/k_array.h>
 
@@ -24,8 +24,12 @@ using value_type = evaluator_traits::value_type<decltype(
 template <class Expression>
 using structure = typename uncvref_t<Expression>::structure;
 
+// template <class Expression>
+// using shape_type = uncvref_t<decltype(std::declval<Expression>().shape())>;
+
 template <class Expression>
-using shape_type = uncvref_t<decltype(std::declval<Expression>().shape())>;
+using dimensionality_type =
+    uncvref_t<decltype(std::declval<Expression>().dimensionality())>;
 
 // sfinae friendly version doesn't work on intel compiler
 // template <class Expression>
@@ -33,10 +37,17 @@ using shape_type = uncvref_t<decltype(std::declval<Expression>().shape())>;
 //     -> decltype(shape_traits::num_dimensions<shape_type<Expression>>()) {
 //   return shape_traits::num_dimensions<shape_type<Expression>>();
 // }
-template <class Expression>
+// template <class Expression>
+// constexpr int num_dimensions() {
+//   return shape_traits::num_dimensions<shape_type<Expression>>();
+// }
+
+template<class Expression>
 constexpr int num_dimensions() {
-  return shape_traits::num_dimensions<shape_type<Expression>>();
+  return dimensionality_traits::num_dimensions<
+      dimensionality_type<Expression>>();
 }
+
 }
 
 namespace reduction_expression_traits {
@@ -47,8 +58,11 @@ using value_type =
 template <class Expression>
 using structure = typename uncvref_t<Expression>::structure;
 
-template <class Expression>
-using shape_type = uncvref_t<decltype(std::declval<Expression>().shape())>;
+using expression_traits::dimensionality_type;
+using expression_traits::num_dimensions;
+
+// template <class Expression>
+// using shape_type = uncvref_t<decltype(std::declval<Expression>().shape())>;
 
 // sfinae friendly version doesn't work on intel compiler
 // template <class Expression>
@@ -56,9 +70,9 @@ using shape_type = uncvref_t<decltype(std::declval<Expression>().shape())>;
 //     -> decltype(shape_traits::num_dimensions<shape_type<Expression>>()) {
 //   return shape_traits::num_dimensions<shape_type<Expression>>();
 // }
-template <class Expression>
-constexpr int num_dimensions() {
-  return shape_traits::num_dimensions<shape_type<Expression>>();
-}
+// template <class Expression>
+// constexpr int num_dimensions() {
+//   return shape_traits::num_dimensions<shape_type<Expression>>();
+// }
 }
 }
