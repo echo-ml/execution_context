@@ -165,7 +165,7 @@ void for_(Options, index_t a, index_t b, const Evaluator& evaluator) {
     evaluator(i);
 }
 
-// temporal, suggest_inline
+// nontemporal, suggest_inline
 template <
     class Options, class Evaluator,
     CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
