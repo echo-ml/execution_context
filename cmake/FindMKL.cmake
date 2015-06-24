@@ -42,8 +42,8 @@ set(MKL_LIBRARIES ${MKL_INTERFACE_LIBRARY} ${MKL_CORE_LIBRARY}
 set(MKL_CXXFLAGS "-DMKL_ILP64 -openmp")
 
 # Find include dir
-# find_path(MKL_INCLUDE_DIR mkl.h
-#     PATHS ${MKL_ROOT}/include)
+find_path(MKL_INCLUDE_DIR mkl.h
+    PATHS ${MKL_ROOT}/include)
 
 # Find include directory
 #  There is no include folder under linux
@@ -127,8 +127,8 @@ set(MKL_CXXFLAGS "-DMKL_ILP64 -openmp")
 # find_package_handle_standard_args(MKL DEFAULT_MSG
 #     MKL_INCLUDE_DIR MKL_LIBRARY MKL_MINIMAL_LIBRARY)
 #
-# if(MKL_FOUND)
-#     set(MKL_INCLUDE_DIRS ${MKL_INCLUDE_DIR})
-#     set(MKL_LIBRARIES ${MKL_LIBRARY})
-#     set(MKL_MINIMAL_LIBRARIES ${MKL_LIBRARY})
-# endif()
+if(MKL_FOUND)
+    set(MKL_INCLUDE_DIRS ${MKL_INCLUDE_DIR})
+    set(MKL_LIBRARIES ${MKL_LIBRARY})
+    set(MKL_MINIMAL_LIBRARIES ${MKL_LIBRARY})
+endif()
