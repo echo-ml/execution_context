@@ -19,7 +19,7 @@ BENCHMARK_SET("tbb_expression_execution", NumTrials(1),
   std::vector<double> x(N), y(N);
   for (auto&& xi : x) xi = dist(rng);
   auto expr =
-      make_expression(N, [&](int i) { return y[i] = std::sqrt(x[i]); });
+      make_expression(N, [&](index_t i) { return y[i] = std::sqrt(x[i]); });
   ExpressionExecuter executer;
   BENCHMARK("base") {
     for (int i = 0; i < N; ++i) y[i] = std::sqrt(x[i]);
@@ -50,7 +50,7 @@ BENCHMARK_SET("square", NumTrials(1),
   std::vector<double> x(N), y(N);
   for (auto&& xi : x) xi = dist(rng);
   auto expr =
-      make_expression(N, [&](int i) { return y[i] = x[i]*x[i]; });
+      make_expression(N, [&](index_t i) { return y[i] = x[i]*x[i]; });
   ExpressionExecuter executer;
   BENCHMARK("base") {
     for (int i = 0; i < N; ++i) y[i] = x[i]*x[i];

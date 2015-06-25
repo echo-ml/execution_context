@@ -6,8 +6,8 @@ using namespace echo;
 using namespace echo::execution_context;
 using namespace echo::execution_context::intel_mkl;
 
-BlasExecuter blas_executer;
+static BlasExecuter blas_executer;
 
 TEST_CASE("mkl_blas_executer") {
-  // CHECK(execution_context::concept::blas_executer<BlasExecuter>());
+  CHECK(execution_context::concept::blas_executer<BlasExecuter>());
 }
