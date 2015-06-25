@@ -69,7 +69,7 @@ class BlockedRange {
 
   BlockedRange() = default;
   BlockedRange(Extent first, Extent last, size_type grainsize = 1)
-      : _first(first), _last(last), _grainsize(grainsize) {}
+      : _last(last), _first(first), _grainsize(grainsize) {}
   template <class SplitFactor,
             CONCEPT_REQUIRES(concept::split_factor<SplitFactor>())>
   BlockedRange(BlockedRange& other, const SplitFactor& split_factor)
