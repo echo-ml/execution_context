@@ -24,7 +24,7 @@ BENCHMARK_SET("tbb_expression_execution", NumTrials(1),
   BENCHMARK("base") {
     for (int i = 0; i < N; ++i) y[i] = std::sqrt(x[i]);
   }
-  BENCHMARK("execution") { executer(expr); }
+  BENCHMARK("execution") { executer(execution_mode::simd, expr); }
   BENCHMARK("parallel") { executer(execution_mode::parallel_fine, expr); }
   BENCHMARK("nontemporal-parallel") {
     executer(execution_mode::parallel_fine | execution_mode::nontemporal |

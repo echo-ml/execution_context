@@ -110,15 +110,15 @@ find_path(MKL_INCLUDE_DIR mkl.h
 #         PATHS ${MKL_ROOT}/lib/ia32/)
 #
 #     ############################ RTL layer ##########################
-#     if(WIN32)
-#         set(MKL_RTL_LIBNAME libiomp5md)
-#     else()
-#         set(MKL_RTL_LIBNAME libiomp5)
-#     endif()
-#     find_library(MKL_RTL_LIBRARY ${MKL_RTL_LIBNAME}
-#         PATHS ${INTEL_RTL_ROOT}/lib)
+    # if(WIN32)
+    #     set(MKL_RTL_LIBNAME libiomp5md)
+    # else()
+    #     set(MKL_RTL_LIBNAME libiomp5)
+    # endif()
+    # find_library(MKL_RTL_LIBRARY ${MKL_RTL_LIBNAME}
+    #     PATHS ${INTEL_RTL_ROOT}/lib)
 #
-#     set(MKL_LIBRARY ${MKL_INTERFACE_LIBRARY} ${MKL_THREADING_LIBRARY} ${MKL_CORE_LIBRARY} ${MKL_FFT_LIBRARY} ${MKL_SCALAPACK_LIBRARY} ${MKL_RTL_LIBRARY})
+    # set(MKL_LIBRARY ${MKL_INTERFACE_LIBRARY} ${MKL_THREADING_LIBRARY} ${MKL_CORE_LIBRARY} ${MKL_FFT_LIBRARY} ${MKL_SCALAPACK_LIBRARY} ${MKL_RTL_LIBRARY})
 #     set(MKL_MINIMAL_LIBRARY ${MKL_INTERFACE_LIBRARY} ${MKL_THREADING_LIBRARY} ${MKL_CORE_LIBRARY} ${MKL_RTL_LIBRARY})
 # endif()
 #

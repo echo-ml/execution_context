@@ -73,6 +73,7 @@ template <int K, class T>
 constexpr bool k_evaluator() {
   using EvaluatorResult = decltype(detail::concept::evaluator_result(
       std::make_index_sequence<2 * K>(), std::declval<const T>()));
+
   return std::is_copy_constructible<T>::value &&
          scalar<uncvref_t<EvaluatorResult>>();
 }
@@ -187,7 +188,7 @@ template <int K>
 struct KEvaluatorExpression_ : Concept {
   template <class T>
   auto require(T&& expression)
-      -> list<k_evaluator_expression<T>(),
+      -> list<models<detail::concept::KEvaluatorExpression, T>(),
               dimensionality_traits::num_dimensions<
                   uncvref_t<decltype(expression.dimensionality())>>() == K>;
 };
