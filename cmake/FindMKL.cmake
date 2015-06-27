@@ -22,16 +22,18 @@ find_package (Threads)
 # set(INTEL_ROOT "/opt/intel" CACHE PATH "Folder contains intel libs")
 # set(MKL_ROOT $ENV{MKLROOT} CACHE PATH "Folder contains MKL")
 
-set(INTEL_ROOT /opt/intel/)
-set(MKL_ROOT ${INTEL_ROOT}/mkl/)
+# set(INTEL_ROOT /opt/intel/compilers_and_libraries_2016.0.042/linux/)
+set(INTEL_ROOT /opt/intel/compilers_and_libraries_2016.0.069/linux/compiler/)
+# set(MKL_ROOT ${INTEL_ROOT}/mkl/)
+set(MKL_ROOT /opt/intel/compilers_and_libraries_2016.0.069/linux/mkl/)
 
 set(MKL_FOUND true)
-set(MKL_INCLUDE_DIRS -I${MKLROOT}/include)
+set(MKL_INCLUDE_DIRS ${MKL_ROOT}/include)
 
-find_library(MKL_INTERFACE_LIBRARY NAMES mkl_intel_ilp64 HINTS ${MKL_ROOT}/lib/intel64)
-find_library(MKL_CORE_LIBRARY NAMES mkl_core HINTS ${MKL_ROOT}/lib/intel64)
-find_library(MKL_THREADING_LIBRARY NAMES mkl_intel_thread HINTS ${MKL_ROOT}/lib/intel64)
-find_library(MKL_IOMP_LIBRARY NAMES iomp5 HINTS ${INTEL_ROOT}/lib/intel64)
+find_library(MKL_INTERFACE_LIBRARY NAMES libmkl_intel_ilp64.a HINTS ${MKL_ROOT}/lib/intel64_lin)
+find_library(MKL_CORE_LIBRARY NAMES libmkl_core.a HINTS ${MKL_ROOT}/lib/intel64_lin)
+find_library(MKL_THREADING_LIBRARY NAMES libmkl_intel_thread.a HINTS ${MKL_ROOT}/lib/intel64_lin)
+find_library(MKL_IOMP_LIBRARY NAMES libiomp5.a HINTS ${INTEL_ROOT}/lib/intel64_lin)
 set(MKL_LIBRARIES ${MKL_INTERFACE_LIBRARY} ${MKL_CORE_LIBRARY} 
   ${MKL_THREADING_LIBRARY} ${MKL_IOMP_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} m)
 
@@ -42,8 +44,8 @@ set(MKL_LIBRARIES ${MKL_INTERFACE_LIBRARY} ${MKL_CORE_LIBRARY}
 set(MKL_CXXFLAGS "-DMKL_ILP64 -openmp")
 
 # Find include dir
-find_path(MKL_INCLUDE_DIR mkl.h
-    PATHS ${MKL_ROOT}/include)
+# find_path(MKL_INCLUDE_DIR mkl.h PATHS ${MKL_ROOT}/include)
+# set(MKL_INCLUDE_DIRS ${MKL_INCLUDE_DIRS} ${MKL_INCLUDE_DIR})
 
 # Find include directory
 #  There is no include folder under linux
@@ -127,8 +129,8 @@ find_path(MKL_INCLUDE_DIR mkl.h
 # find_package_handle_standard_args(MKL DEFAULT_MSG
 #     MKL_INCLUDE_DIR MKL_LIBRARY MKL_MINIMAL_LIBRARY)
 #
-if(MKL_FOUND)
-    set(MKL_INCLUDE_DIRS ${MKL_INCLUDE_DIR})
-    set(MKL_LIBRARIES ${MKL_LIBRARY})
-    set(MKL_MINIMAL_LIBRARIES ${MKL_LIBRARY})
-endif()
+# if(MKL_FOUND)
+#     set(MKL_INCLUDE_DIRS ${MKL_INCLUDE_DIR})
+    # set(MKL_LIBRARIES ${MKL_LIBRARY})
+    # set(MKL_MINIMAL_LIBRARIES ${MKL_LIBRARY})
+# endif()

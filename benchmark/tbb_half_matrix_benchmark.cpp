@@ -27,13 +27,13 @@ BENCHMARK_SET("tbb_half_matrix", NumTrials(1), LinearRange(1, 10'000, 1'000),
       });
   ExpressionExecuter executer;
   BENCHMARK("half_expr") { 
-    // executer(execution_mode::simd, expr1); 
+    executer(execution_mode::simd, expr1); 
   }
   BENCHMARK("half_parallel_expr") {
-    // executer(execution_mode::simd | execution_mode::parallel, expr1);
+    executer(execution_mode::simd | execution_mode::parallel, expr1);
   }
   BENCHMARK("full_expr") { 
-    // executer(execution_mode::simd, expr2); 
+    executer(execution_mode::simd, expr2); 
   }
 }
 
