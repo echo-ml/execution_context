@@ -1,5 +1,7 @@
 #pragma once
 
+#define DETAIL_NS detail_concept
+
 #include <echo/execution_context/structure.h>
 #include <echo/execution_context/allocation_backend.h>
 #include <echo/execution_context/expression_traits.h>
@@ -27,8 +29,7 @@ constexpr bool scalar() {
 // flat_evaluator //
 ////////////////////
 
-namespace detail {
-namespace concept {
+namespace DETAIL_NS {
 struct FlatEvaluator : Concept {
   template <class T>
   auto require(T&& evaluator)
@@ -36,19 +37,17 @@ struct FlatEvaluator : Concept {
               scalar<uncvref_t<std::result_of_t<T(index_t)>>>()>;
 };
 }
-}
 
 template <class T>
 constexpr bool flat_evaluator() {
-  return models<detail::concept::FlatEvaluator, T>();
+  return models<DETAIL_NS::FlatEvaluator, T>();
 }
 
 /////////////////
 // k_evaluator //
 /////////////////
 
-namespace detail {
-namespace concept {
+namespace DETAIL_NS {
 template <std::size_t... Indexes, class Evaluator>
 auto evaluator_result(std::index_sequence<Indexes...>,
                       const Evaluator& evaluator)
@@ -66,12 +65,11 @@ struct KEvaluator : Concept {
                   std::make_index_sequence<2 * K>(), evaluator))>>()>;
 };
 }
-}
 
 // rewrite concept in this weird way to avoid a bug with intel c++ compiler
 template <int K, class T>
 constexpr bool k_evaluator() {
-  using EvaluatorResult = decltype(detail::concept::evaluator_result(
+  using EvaluatorResult = decltype(DETAIL_NS::evaluator_result(
       std::make_index_sequence<2 * K>(), std::declval<const T>()));
 
   return std::is_copy_constructible<T>::value &&
@@ -109,8 +107,7 @@ constexpr bool evaluator() {
 // reducer //
 /////////////
 
-namespace detail {
-namespace concept {
+namespace DETAIL_NS {
 struct Reducer : Concept {
   template <class Scalar, class Reducer>
   auto require(Scalar&& x, Reducer&& reducer)
@@ -118,11 +115,10 @@ struct Reducer : Concept {
               same<Scalar, decltype(reducer(x, x))>()>;
 };
 }
-}
 
 template <class Scalar, class Reducer>
 constexpr bool reducer() {
-  return models<detail::concept::Reducer, Scalar, Reducer>();
+  return models<DETAIL_NS::Reducer, Scalar, Reducer>();
 }
 
 ///////////////
@@ -139,8 +135,7 @@ constexpr bool structure() {
 // flat_evaluator_expression //
 ///////////////////////////////
 
-namespace detail {
-namespace concept {
+namespace DETAIL_NS {
 struct FlatEvaluatorExpression : Concept {
   template <class T>
   auto require(T&& expression)
@@ -150,19 +145,17 @@ struct FlatEvaluatorExpression : Concept {
               flat_evaluator<uncvref_t<decltype(expression.evaluator())>>()>;
 };
 }
-}
 
 template <class T>
 constexpr bool flat_evaluator_expression() {
-  return models<detail::concept::FlatEvaluatorExpression, T>();
+  return models<DETAIL_NS::FlatEvaluatorExpression, T>();
 }
 
 ////////////////////////////
 // k_evaluator_expression //
 ////////////////////////////
 
-namespace detail {
-namespace concept {
+namespace DETAIL_NS {
 struct KEvaluatorExpression : Concept {
   template <class T>
   auto require(T&& expression)
@@ -175,34 +168,29 @@ struct KEvaluatorExpression : Concept {
                           uncvref_t<decltype(expression.evaluator())>>()>;
 };
 }
-}
 
 template <class T>
 constexpr bool k_evaluator_expression() {
-  return models<detail::concept::KEvaluatorExpression, T>();
+  return models<DETAIL_NS::KEvaluatorExpression, T>();
 }
 
-namespace detail {
-namespace concept {
+namespace DETAIL_NS {
 template <int K>
 struct KEvaluatorExpression_ : Concept {
   template <class T>
   auto require(T&& expression)
-      -> list<models<detail::concept::KEvaluatorExpression, T>(),
+      -> list<models<DETAIL_NS::KEvaluatorExpression, T>(),
               dimensionality_traits::num_dimensions<
                   uncvref_t<decltype(expression.dimensionality())>>() == K>;
 };
 }
-}
 
 template <int K, class T>
 constexpr bool k_evaluator_expression() {
-  return models<detail::concept::KEvaluatorExpression_<K>, T>();
+  return models<DETAIL_NS::KEvaluatorExpression_<K>, T>();
 }
 
-namespace detail {
-namespace concept {
-
+namespace DETAIL_NS {
 template <structure::uplo_t Uplo, bool Strict>
 void match_half_structure(structure::half<Uplo, Strict>);
 
@@ -214,19 +202,17 @@ struct HalfMatrixExpression : Concept {
                   match_half_structure(expression_traits::structure<T>()))>()>;
 };
 }
-}
 
 template <class T>
 constexpr bool half_matrix_expression() {
-  return models<detail::concept::HalfMatrixExpression, T>();
+  return models<DETAIL_NS::HalfMatrixExpression, T>();
 }
 
 /////////////////////////////////////////
 // flat_evaluator_reduction_expression //
 /////////////////////////////////////////
 
-namespace detail {
-namespace concept {
+namespace DETAIL_NS {
 struct FlatEvaluatorReductionExpression : Concept {
   template <class T>
   auto require(T&& expression) -> list<
@@ -243,19 +229,17 @@ struct FlatEvaluatorReductionExpression : Concept {
       valid<decltype(expression.reducer())>()>;
 };
 }
-}
 
 template <class T>
 constexpr bool flat_evaluator_reduction_expression() {
-  return models<detail::concept::FlatEvaluatorReductionExpression, T>();
+  return models<DETAIL_NS::FlatEvaluatorReductionExpression, T>();
 }
 
 //////////////////////////////////////
 // k_evaluator_reduction_expression //
 //////////////////////////////////////
 
-namespace detail {
-namespace concept {
+namespace DETAIL_NS {
 struct KEvaluatorReductionExpression : Concept {
   template <class T>
   auto require(T&& expression) -> list<
@@ -275,15 +259,13 @@ struct KEvaluatorReductionExpression : Concept {
       valid<decltype(expression.reducer())>()>;
 };
 }
-}
 
 template <class T>
 constexpr bool k_evaluator_reduction_expression() {
-  return models<detail::concept::KEvaluatorReductionExpression, T>();
+  return models<DETAIL_NS::KEvaluatorReductionExpression, T>();
 }
 
-namespace detail {
-namespace concept {
+namespace DETAIL_NS {
 template <int K>
 struct KEvaluatorReductionExpression_ : Concept {
   template <class T>
@@ -293,11 +275,10 @@ struct KEvaluatorReductionExpression_ : Concept {
                   uncvref_t<decltype(expression.dimensionality())>>() == K>;
 };
 }
-}
 
 template <int K, class T>
 constexpr bool k_evaluator_reduction_expression() {
-  return models<detail::concept::KEvaluatorReductionExpression_<K>, T>();
+  return models<DETAIL_NS::KEvaluatorReductionExpression_<K>, T>();
 }
 
 //////////////////////////
@@ -323,9 +304,7 @@ constexpr bool expression() {
 // expression_executer //
 /////////////////////////
 
-namespace detail {
-namespace concept {
-
+namespace DETAIL_NS {
 struct TestEvaluator1 {
   double operator()(index_t) const;
 };
@@ -353,19 +332,17 @@ struct ExpressionExecuter : Concept {
               valid<decltype(executer(TestExpression2()))>()>;
 };
 }
-}
 
 template <class T>
 constexpr bool expression_executer() {
-  return models<detail::concept::ExpressionExecuter, T>();
+  return models<DETAIL_NS::ExpressionExecuter, T>();
 }
 
 ////////////////////////
 // allocation_backend //
 ////////////////////////
 
-namespace detail {
-namespace concept {
+namespace DETAIL_NS {
 struct AllocationBackend : Concept {
   template <class T>
   auto require(T&& allocation_backend)
@@ -375,12 +352,13 @@ struct AllocationBackend : Concept {
                   make_aligned_allocator<double>(allocation_backend))>()>;
 };
 }
-}
 
 template <class T>
 constexpr bool allocation_backend() {
-  return models<detail::concept::AllocationBackend, T>();
+  return models<DETAIL_NS::AllocationBackend, T>();
 }
 }
 }
 }
+
+#undef DETAIL_NS

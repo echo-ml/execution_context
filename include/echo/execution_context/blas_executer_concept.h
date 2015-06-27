@@ -1,5 +1,7 @@
 #pragma once
 
+#define DETAIL_NS detail_blas_execution_concept
+
 #include <echo/execution_context/matrix_utility.h>
 #include <echo/concept.h>
 
@@ -7,9 +9,7 @@ namespace echo {
 namespace execution_context {
 namespace concept {
 
-namespace detail {
-namespace blas_executer_concept {
-
+namespace DETAIL_NS {
 template <class Scalar>
 struct BlasExecuter : Concept {
   template <class T>
@@ -61,13 +61,14 @@ struct BlasExecuter : Concept {
           std::declval<Scalar*>(), index_t()))>()>;
 };
 }
-}
 
 template <class T>
 constexpr bool blas_executer() {
-  return models<detail::blas_executer_concept::BlasExecuter<float>, T>() &&
-         models<detail::blas_executer_concept::BlasExecuter<double>, T>();
+  return models<DETAIL_NS::BlasExecuter<float>, T>() &&
+         models<DETAIL_NS::BlasExecuter<double>, T>();
 }
 }
 }
 }
+
+#undef DETAIL_NS

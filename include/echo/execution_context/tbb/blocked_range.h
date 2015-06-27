@@ -1,5 +1,7 @@
 #pragma once
 
+#define DETAIL_NS detail_blocked_range
+
 #include <echo/concept.h>
 #include <echo/k_array.h>
 #include <tbb/tbb.h>
@@ -35,8 +37,7 @@ constexpr bool extent() {
 // blocked_range //
 ///////////////////
 
-namespace detail {
-namespace blocked_range {
+namespace DETAIL_NS {
 struct BlockedRange : Concept {
   template <class T>
   auto require(T&& r) -> list<
@@ -46,11 +47,10 @@ struct BlockedRange : Concept {
       std::is_constructible<T, T&, tbb::split>::value>;
 };
 }
-}
 
 template <class T>
 constexpr bool blocked_range() {
-  return models<detail::blocked_range::BlockedRange, T>();
+  return models<DETAIL_NS::BlockedRange, T>();
 }
 }
 
@@ -118,9 +118,7 @@ CONCEPT_ASSERT(concept::blocked_range<BlockedRange<std::size_t>>());
 // ExtentType //
 ////////////////
 
-namespace detail {
-namespace blocked_range {
-
+namespace DETAIL_NS {
 template <int I, class... Extents>
 struct ExtentTypeImpl {};
 
@@ -139,15 +137,12 @@ struct ExtentTypeImpl<I, ExtentFirst, ExtentsRest...> {
 template <int I, class... Extents>
 using ExtentType = typename ExtentTypeImpl<I, Extents...>::type;
 }
-}
 
 ///////////////////////
 // BlockedRangeTuple //
 ///////////////////////
 
-namespace detail {
-namespace blocked_range {
-
+namespace DETAIL_NS {
 template <class, class...>
 struct BlockedRangeTupleImpl {};
 
@@ -161,15 +156,12 @@ using BlockedRangeTuple =
     typename BlockedRangeTupleImpl<std::make_index_sequence<N>,
                                    Extents...>::type;
 }
-}
 
 ///////////
 // split //
 ///////////
 
-namespace detail {
-namespace blocked_range {
-
+namespace DETAIL_NS {
 template <class SplitFactor, std::size_t I, class... Extents>
 void split_impl(const SplitFactor& split_factor, std::index_sequence<I>,
                 std::tuple<BlockedRange<Extents>...>& left_blocked_ranges,
@@ -207,15 +199,12 @@ void split(const SplitFactor& split_factor,
              left_blocked_ranges, right_blocked_ranges);
 }
 }
-}
 
 ///////////////
 // get_first //
 ///////////////
 
-namespace detail {
-namespace blocked_range {
-
+namespace DETAIL_NS {
 template <int I, class ExtentFirst, class... ExtentsRest,
           CONCEPT_REQUIRES(I == 0)>
 auto get_extent_from_index(ExtentFirst extent_first, ExtentsRest...) {
@@ -244,15 +233,12 @@ auto get_last(Extents... extents) {
   return get_extent_from_index<2 * I + 1>(extents...);
 }
 }
-}
 
 /////////
 // or_ //
 /////////
 
-namespace detail {
-namespace blocked_range {
-
+namespace DETAIL_NS {
 inline bool or_impl() { return false; }
 
 template <class... BoolsRest>
@@ -266,14 +252,12 @@ bool or_(Bools... bools) {
   return or_impl(bools...);
 }
 }
-}
 
 //////////////
 // is_empty //
 //////////////
 
-namespace detail {
-namespace blocked_range {
+namespace DETAIL_NS {
 template <std::size_t... Indexes, class... Extents>
 bool is_empty_impl(std::index_sequence<Indexes...>,
                    const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
@@ -285,14 +269,12 @@ bool is_empty(const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
   return is_empty_impl(std::index_sequence_for<Extents...>(), blocked_ranges);
 }
 }
-}
 
 //////////////////
 // is_divisible //
 //////////////////
 
-namespace detail {
-namespace blocked_range {
+namespace DETAIL_NS {
 template <std::size_t... Indexes, class... Extents>
 bool is_divisible_impl(
     std::index_sequence<Indexes...>,
@@ -304,7 +286,6 @@ template <class... Extents,
 bool is_divisible(const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
   return is_divisible_impl(std::index_sequence_for<Extents...>(),
                            blocked_ranges);
-}
 }
 }
 
@@ -330,17 +311,16 @@ class KBlockedRange {
             CONCEPT_REQUIRES(concept::split_factor<SplitFactor>())>
   KBlockedRange(KBlockedRange& other, const SplitFactor& split_factor)
       : _blocked_ranges(other._blocked_ranges) {
-    detail::blocked_range::split(split_factor, other._blocked_ranges,
-                                 _blocked_ranges);
+    DETAIL_NS::split(split_factor, other._blocked_ranges, _blocked_ranges);
     assert(!other.empty() && !empty());
   }
-  template <class... BlockedRanges,
-            CONCEPT_REQUIRES(
-                sizeof...(BlockedRanges) == N &&
-                and_c<concept::blocked_range<BlockedRanges>()...>() &&
-                std::is_constructible<
-                    detail::blocked_range::BlockedRangeTuple<N, Extents...>,
-                    const BlockedRanges&...>::value)>
+  template <
+      class... BlockedRanges,
+      CONCEPT_REQUIRES(
+          sizeof...(BlockedRanges) == N &&
+          and_c<concept::blocked_range<BlockedRanges>()...>() &&
+          std::is_constructible<DETAIL_NS::BlockedRangeTuple<N, Extents...>,
+                                const BlockedRanges&...>::value)>
   KBlockedRange(const BlockedRanges&... blocked_ranges)
       : _blocked_ranges(blocked_ranges...) {}
 
@@ -349,21 +329,17 @@ class KBlockedRange {
     return std::get<I>(_blocked_ranges);
   }
 
-  bool empty() const {
-    return detail::blocked_range::is_empty(_blocked_ranges);
-  }
-  bool is_divisible() const {
-    return detail::blocked_range::is_divisible(_blocked_ranges);
-  }
+  bool empty() const { return DETAIL_NS::is_empty(_blocked_ranges); }
+  bool is_divisible() const { return DETAIL_NS::is_divisible(_blocked_ranges); }
 
  private:
   template <std::size_t... Indexes, class... ExtentsInit>
   KBlockedRange(std::index_sequence<Indexes...>, ExtentsInit... extents)
-      : _blocked_ranges(BlockedRange<
-            detail::blocked_range::ExtentType<Indexes, Extents...>>(
-            detail::blocked_range::get_first<Indexes>(extents...),
-            detail::blocked_range::get_last<Indexes>(extents...))...) {}
-  detail::blocked_range::BlockedRangeTuple<N, Extents...> _blocked_ranges;
+      : _blocked_ranges(
+            BlockedRange<DETAIL_NS::ExtentType<Indexes, Extents...>>(
+                DETAIL_NS::get_first<Indexes>(extents...),
+                DETAIL_NS::get_last<Indexes>(extents...))...) {}
+  DETAIL_NS::BlockedRangeTuple<N, Extents...> _blocked_ranges;
 };
 
 template <int I, int N, class... Extents,
@@ -384,8 +360,7 @@ auto make_blocked_range(Extent first, Extent last, std::size_t grainsize = 1) {
   return BlockedRange<Extent>(first, last, grainsize);
 }
 
-namespace detail {
-namespace blocked_range {
+namespace DETAIL_NS {
 template <std::size_t... Indexes, class... Extents,
           CONCEPT_REQUIRES(sizeof...(Indexes)*2 == sizeof...(Extents) &&
                            and_c<concept::extent<Extents>()...>())>
@@ -395,13 +370,12 @@ auto make_blocked_range_impl(std::index_sequence<Indexes...>,
                        decltype(get_first<Indexes>(extents...))...>(extents...);
 }
 }
-}
 
 template <class... Extents,
           CONCEPT_REQUIRES(and_c<concept::extent<Extents>()...>() &&
                            sizeof...(Extents) % 2 == 0)>
 auto make_blocked_range(Extents... extents) {
-  return detail::blocked_range::make_blocked_range_impl(
+  return DETAIL_NS::make_blocked_range_impl(
       std::make_index_sequence<sizeof...(Extents) / 2>(), extents...);
 }
 
@@ -412,8 +386,7 @@ auto make_blocked_range(const BlockedRange<Extents>&... blocked_ranges) {
   return KBlockedRange<sizeof...(Extents), Extents...>(blocked_ranges...);
 }
 
-namespace detail {
-namespace blocked_range {
+namespace DETAIL_NS {
 template <std::size_t... Indexes, class Dimensionality,
           CONCEPT_REQUIRES(k_array::concept::dimensionality<Dimensionality>()),
           CONCEPT_REQUIRES(dimensionality_traits::num_dimensions<
@@ -424,19 +397,17 @@ auto make_blocked_range_impl(std::index_sequence<Indexes...>,
       BlockedRange<index_t>(0, get_extent<Indexes>(dimensionality))...);
 }
 }
-}
 
 template <class Dimensionality,
           CONCEPT_REQUIRES(k_array::concept::dimensionality<Dimensionality>())>
 auto make_blocked_range(const Dimensionality& dimensionality) {
-  return detail::blocked_range::make_blocked_range_impl(
+  return DETAIL_NS::make_blocked_range_impl(
       std::make_index_sequence<
           dimensionality_traits::num_dimensions<Dimensionality>()>(),
       dimensionality);
 }
 
-namespace detail {
-namespace blocked_range {
+namespace DETAIL_NS {
 template <class Continuation, class Dimensionality,
           CONCEPT_REQUIRES(k_array::concept::dimensionality<Dimensionality>())>
 auto make_blocked_range_impl(std::index_sequence<>, std::size_t,
@@ -464,7 +435,6 @@ auto make_blocked_range_impl(std::index_sequence<IndexFirst, IndexesRest...>,
       dimensionality);
 }
 }
-}
 
 template <class Dimensionality,
           CONCEPT_REQUIRES(k_array::concept::dimensionality<Dimensionality>())>
@@ -472,7 +442,7 @@ auto make_blocked_range(const Dimensionality& dimensionality,
                         std::size_t grainsize) {
   const int N = dimensionality_traits::num_dimensions<Dimensionality>();
   using KBlockedRangeType = KBlockedRange<N, index_t>;
-  return detail::blocked_range::make_blocked_range_impl(
+  return DETAIL_NS::make_blocked_range_impl(
       std::make_index_sequence<N>(),
       grainsize, [](const auto&... blocked_ranges) {
         return KBlockedRangeType(blocked_ranges...);
@@ -481,3 +451,5 @@ auto make_blocked_range(const Dimensionality& dimensionality,
 }
 }
 }
+
+#undef DETAIL_NS
