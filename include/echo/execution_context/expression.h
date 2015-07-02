@@ -8,10 +8,9 @@
 namespace echo {
 namespace execution_context {
 
-////////////////
-// Expression //
-////////////////
-
+//------------------------------------------------------------------------------
+// Expression
+//------------------------------------------------------------------------------
 template <class Dimensionality, class Structure, class Evaluator>
 class Expression : htl::Pack<Dimensionality> {
  public:
@@ -25,10 +24,9 @@ class Expression : htl::Pack<Dimensionality> {
   Evaluator _evaluator;
 };
 
-/////////////////////
-// make_expression //
-/////////////////////
-
+//------------------------------------------------------------------------------
+// make_expression
+//------------------------------------------------------------------------------
 template <class Structure, class Dimensionality, class Evaluator,
           CONCEPT_REQUIRES(k_array::concept::dimensionality<Dimensionality>() &&
                            execution_context::concept::structure<Structure>() &&
@@ -69,10 +67,9 @@ auto make_expression(Extent1 extent1, Extent2 extent2,
                                     evaluator);
 }
 
-/////////////////////////
-// ReductionExpression //
-/////////////////////////
-
+//------------------------------------------------------------------------------
+// ReductionExpression
+//------------------------------------------------------------------------------
 template <class Dimensionality, class Structure, class Mapper, class Reducer>
 class ReductionExpression : Dimensionality {
   using Scalar =
@@ -100,10 +97,9 @@ class ReductionExpression : Dimensionality {
   Scalar _identity;
 };
 
-///////////////////////////////
-// make_reduction_expression //
-///////////////////////////////
-
+//------------------------------------------------------------------------------
+// make_reduction_expression
+//------------------------------------------------------------------------------
 template <
     class Dimensionality, class Mapper, class Reducer,
     CONCEPT_REQUIRES(k_array::concept::dimensionality<Dimensionality>()),

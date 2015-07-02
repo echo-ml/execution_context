@@ -9,6 +9,9 @@ namespace echo {
 namespace execution_context {
 namespace concept {
 
+//------------------------------------------------------------------------------
+// blas_executer
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <class Scalar>
 struct BlasExecuter : Concept {

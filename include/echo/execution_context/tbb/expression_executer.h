@@ -11,6 +11,9 @@ namespace echo {
 namespace execution_context {
 namespace intel_tbb {
 
+//------------------------------------------------------------------------------
+// ExpressionExecuter
+//------------------------------------------------------------------------------
 class ExpressionExecuter {
   static constexpr auto kDefaultOptions =
       execution_mode::nosimd | execution_mode::serial |
@@ -51,10 +54,7 @@ class ExpressionExecuter {
   }
 
  private:
-  ////////////////////
-  // flat_evaluator //
-  ////////////////////
-
+  // flat_evaluator
   template <
       class Options, class Expression,
       CONCEPT_REQUIRES(
@@ -123,10 +123,7 @@ class ExpressionExecuter {
     this->execute(options, shaped_expression);
   }
 
-  ///////////////////////////////
-  // general-shaped-expression //
-  ///////////////////////////////
-
+  // general-shaped-expression
   template <
       class Options, class Expression,
       CONCEPT_REQUIRES(
@@ -214,10 +211,7 @@ class ExpressionExecuter {
                  [&](index_t i) { return evaluator(i, size); });
   }
 
-  /////////////////
-  // half-matrix //
-  /////////////////
-
+  // half-matrix
   template <
       class Options, class Expression,
       CONCEPT_REQUIRES(
@@ -349,10 +343,7 @@ class ExpressionExecuter {
                    [&](index_t i) { return evaluator(i, n, j, n); });
   }
 
-  ///////////////////////////////
-  // flat-reduction-expression //
-  ///////////////////////////////
-
+  // flat-reduction-expression
   template <class Options, class Expression,
             CONCEPT_REQUIRES(
                 option::concept::option_list<Options>() &&
@@ -430,10 +421,7 @@ class ExpressionExecuter {
     return result;
   }
 
-  /////////////////////////////////
-  // shaped-reduction-expression //
-  /////////////////////////////////
-
+  // shaped-reduction-expression
   template <class Options, class Expression,
             CONCEPT_REQUIRES(
                 option::concept::option_list<Options>() &&

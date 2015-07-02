@@ -29,10 +29,9 @@ using strict_lower_half = half<uplo_t::lower, true>;
 
 namespace concept {
 
-//////////
-// base //
-//////////
-
+//------------------------------------------------------------------------------
+// base
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 inline
 auto general_impl(structure::general) -> std::true_type;
@@ -47,10 +46,9 @@ constexpr bool general() {
   return Result::value;
 }
 
-//////////
-// half //
-//////////
-
+//------------------------------------------------------------------------------
+// half
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template<uplo_t Uplo, bool Strict>
 auto half_impl(structure::half<Uplo, Strict>) -> std::true_type;

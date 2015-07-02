@@ -14,10 +14,9 @@ namespace echo {
 namespace execution_context {
 namespace concept {
 
-////////////
-// scalar //
-////////////
-
+//------------------------------------------------------------------------------
+// scalar
+//------------------------------------------------------------------------------
 template <class T>
 constexpr bool scalar() {
   return std::is_integral<T>::value || std::is_floating_point<T>::value ||
@@ -25,10 +24,9 @@ constexpr bool scalar() {
          std::is_same<T, std::complex<double>>::value;
 }
 
-////////////////////
-// flat_evaluator //
-////////////////////
-
+//------------------------------------------------------------------------------
+// flat_evaluator
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 struct FlatEvaluator : Concept {
   template <class T>
@@ -43,10 +41,9 @@ constexpr bool flat_evaluator() {
   return models<DETAIL_NS::FlatEvaluator, T>();
 }
 
-/////////////////
-// k_evaluator //
-/////////////////
-
+//------------------------------------------------------------------------------
+// k_evaluator
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <std::size_t... Indexes, class Evaluator>
 auto evaluator_result(std::index_sequence<Indexes...>,
@@ -76,37 +73,33 @@ constexpr bool k_evaluator() {
          scalar<uncvref_t<EvaluatorResult>>();
 }
 
-//////////////////////////
-// compatible_evaluator //
-//////////////////////////
-
+//------------------------------------------------------------------------------
+// compatible_evaluator
+//------------------------------------------------------------------------------
 template <int K, class T>
 constexpr bool k_compatible_evaluator() {
   return flat_evaluator<T>() || k_evaluator<K, T>();
 }
 
-//////////////////////
-// matrix_evaluator //
-//////////////////////
-
+//------------------------------------------------------------------------------
+// matrix_evaluator
+//------------------------------------------------------------------------------
 template <class T>
 constexpr bool matrix_evaluator() {
   return k_evaluator<2, T>();
 }
 
-///////////////
-// evaluator //
-///////////////
-
+//------------------------------------------------------------------------------
+// evaluator
+//------------------------------------------------------------------------------
 template <class T>
 constexpr bool evaluator() {
   return matrix_evaluator<T>() || flat_evaluator<T>();
 }
 
-/////////////
-// reducer //
-/////////////
-
+//------------------------------------------------------------------------------
+// reducer
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 struct Reducer : Concept {
   template <class Scalar, class Reducer>
@@ -121,20 +114,18 @@ constexpr bool reducer() {
   return models<DETAIL_NS::Reducer, Scalar, Reducer>();
 }
 
-///////////////
-// structure //
-///////////////
-
+//------------------------------------------------------------------------------
+// structure
+//------------------------------------------------------------------------------
 template <class T>
 constexpr bool structure() {
   return std::is_convertible<T,
                              echo::execution_context::structure::base>::value;
 }
 
-///////////////////////////////
-// flat_evaluator_expression //
-///////////////////////////////
-
+//------------------------------------------------------------------------------
+// flat_evaluator_expression
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 struct FlatEvaluatorExpression : Concept {
   template <class T>
@@ -151,10 +142,9 @@ constexpr bool flat_evaluator_expression() {
   return models<DETAIL_NS::FlatEvaluatorExpression, T>();
 }
 
-////////////////////////////
-// k_evaluator_expression //
-////////////////////////////
-
+//------------------------------------------------------------------------------
+// k_evaluator_expression
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 struct KEvaluatorExpression : Concept {
   template <class T>
@@ -208,10 +198,9 @@ constexpr bool half_matrix_expression() {
   return models<DETAIL_NS::HalfMatrixExpression, T>();
 }
 
-/////////////////////////////////////////
-// flat_evaluator_reduction_expression //
-/////////////////////////////////////////
-
+//------------------------------------------------------------------------------
+// flat_evaluator_reduction_expression
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 struct FlatEvaluatorReductionExpression : Concept {
   template <class T>
@@ -235,10 +224,9 @@ constexpr bool flat_evaluator_reduction_expression() {
   return models<DETAIL_NS::FlatEvaluatorReductionExpression, T>();
 }
 
-//////////////////////////////////////
-// k_evaluator_reduction_expression //
-//////////////////////////////////////
-
+//------------------------------------------------------------------------------
+// k_evaluator_reduction_expression
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 struct KEvaluatorReductionExpression : Concept {
   template <class T>
@@ -281,29 +269,26 @@ constexpr bool k_evaluator_reduction_expression() {
   return models<DETAIL_NS::KEvaluatorReductionExpression_<K>, T>();
 }
 
-//////////////////////////
-// reduction_expression //
-//////////////////////////
-
+//------------------------------------------------------------------------------
+// reduction_expression
+//------------------------------------------------------------------------------
 template <class T>
 constexpr bool reduction_expression() {
   return flat_evaluator_reduction_expression<T>() ||
          k_evaluator_reduction_expression<T>();
 }
 
-////////////////
-// expression //
-////////////////
-
+//------------------------------------------------------------------------------
+// expression
+//------------------------------------------------------------------------------
 template <class T>
 constexpr bool expression() {
   return flat_evaluator_expression<T>() || k_evaluator_expression<T>();
 }
 
-/////////////////////////
-// expression_executer //
-/////////////////////////
-
+//------------------------------------------------------------------------------
+// expression_executer
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 struct TestEvaluator1 {
   double operator()(index_t) const;
@@ -338,10 +323,9 @@ constexpr bool expression_executer() {
   return models<DETAIL_NS::ExpressionExecuter, T>();
 }
 
-////////////////////////
-// allocation_backend //
-////////////////////////
-
+//------------------------------------------------------------------------------
+// allocation_backend
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 struct AllocationBackend : Concept {
   template <class T>

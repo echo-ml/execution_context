@@ -14,29 +14,26 @@ namespace intel_tbb {
 
 namespace concept {
 
-//////////////////
-// split_factor //
-//////////////////
-
+//------------------------------------------------------------------------------
+// split_factor
+//------------------------------------------------------------------------------
 template <class T>
 constexpr bool split_factor() {
   return std::is_same<T, tbb::split>::value ||
          std::is_same<T, tbb::proportional_split>::value;
 }
 
-////////////
-// extent //
-////////////
-
+//------------------------------------------------------------------------------
+// extent
+//------------------------------------------------------------------------------
 template <class T>
 constexpr bool extent() {
   return std::is_integral<T>::value;
 }
 
-///////////////////
-// blocked_range //
-///////////////////
-
+//------------------------------------------------------------------------------
+// blocked_range
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 struct BlockedRange : Concept {
   template <class T>
@@ -54,10 +51,9 @@ constexpr bool blocked_range() {
 }
 }
 
-//////////////////
-// BlockedRange //
-//////////////////
-
+//------------------------------------------------------------------------------
+// BlockedRange
+//------------------------------------------------------------------------------
 template <class Extent>
 class BlockedRange {
   static_assert(concept::extent<Extent>(), "invalid extent type");
@@ -114,10 +110,9 @@ class BlockedRange {
 
 CONCEPT_ASSERT(concept::blocked_range<BlockedRange<std::size_t>>());
 
-////////////////
-// ExtentType //
-////////////////
-
+//------------------------------------------------------------------------------
+// ExtentType
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <int I, class... Extents>
 struct ExtentTypeImpl {};
@@ -138,10 +133,9 @@ template <int I, class... Extents>
 using ExtentType = typename ExtentTypeImpl<I, Extents...>::type;
 }
 
-///////////////////////
-// BlockedRangeTuple //
-///////////////////////
-
+//------------------------------------------------------------------------------
+// BlockedRangeTuple
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <class, class...>
 struct BlockedRangeTupleImpl {};
@@ -157,10 +151,9 @@ using BlockedRangeTuple =
                                    Extents...>::type;
 }
 
-///////////
-// split //
-///////////
-
+//------------------------------------------------------------------------------
+// split
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <class SplitFactor, std::size_t I, class... Extents>
 void split_impl(const SplitFactor& split_factor, std::index_sequence<I>,
@@ -200,10 +193,9 @@ void split(const SplitFactor& split_factor,
 }
 }
 
-///////////////
-// get_first //
-///////////////
-
+//------------------------------------------------------------------------------
+// get_first
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <int I, class ExtentFirst, class... ExtentsRest,
           CONCEPT_REQUIRES(I == 0)>
@@ -234,10 +226,9 @@ auto get_last(Extents... extents) {
 }
 }
 
-/////////
-// or_ //
-/////////
-
+//------------------------------------------------------------------------------
+// or_
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 inline bool or_impl() { return false; }
 
@@ -253,10 +244,9 @@ bool or_(Bools... bools) {
 }
 }
 
-//////////////
-// is_empty //
-//////////////
-
+//------------------------------------------------------------------------------
+// is_empty
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <std::size_t... Indexes, class... Extents>
 bool is_empty_impl(std::index_sequence<Indexes...>,
@@ -270,10 +260,9 @@ bool is_empty(const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
 }
 }
 
-//////////////////
-// is_divisible //
-//////////////////
-
+//------------------------------------------------------------------------------
+// is_divisible
+//------------------------------------------------------------------------------
 namespace DETAIL_NS {
 template <std::size_t... Indexes, class... Extents>
 bool is_divisible_impl(
@@ -289,10 +278,9 @@ bool is_divisible(const std::tuple<BlockedRange<Extents>...>& blocked_ranges) {
 }
 }
 
-///////////////////
-// KBlockedRange //
-///////////////////
-
+//------------------------------------------------------------------------------
+// KBlockedRange
+//------------------------------------------------------------------------------
 template <int N, class... Extents>
 class KBlockedRange {
   static_assert(sizeof...(Extents) > 0 && sizeof...(Extents) <= N, "");
@@ -351,10 +339,9 @@ const auto& project(const KBlockedRange<N, Extents...>& k_blocked_range) {
 
 CONCEPT_ASSERT(concept::blocked_range<KBlockedRange<1, std::size_t>>());
 
-////////////////////////
-// make_blocked_range //
-////////////////////////
-
+//------------------------------------------------------------------------------
+// make_blocked_range
+//------------------------------------------------------------------------------
 template <class Extent, CONCEPT_REQUIRES(concept::extent<Extent>())>
 auto make_blocked_range(Extent first, Extent last, std::size_t grainsize = 1) {
   return BlockedRange<Extent>(first, last, grainsize);
