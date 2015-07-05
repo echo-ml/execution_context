@@ -34,8 +34,9 @@ find_library(MKL_INTERFACE_LIBRARY NAMES libmkl_intel_ilp64.a HINTS ${MKL_ROOT}/
 find_library(MKL_CORE_LIBRARY NAMES libmkl_core.a HINTS ${MKL_ROOT}/lib/intel64_lin)
 find_library(MKL_THREADING_LIBRARY NAMES libmkl_intel_thread.a HINTS ${MKL_ROOT}/lib/intel64_lin)
 find_library(MKL_IOMP_LIBRARY NAMES libiomp5.a HINTS ${INTEL_ROOT}/lib/intel64_lin)
-set(MKL_LIBRARIES ${MKL_INTERFACE_LIBRARY} ${MKL_CORE_LIBRARY} 
-  ${MKL_THREADING_LIBRARY} ${MKL_IOMP_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} m)
+set(MKL_LIBRARIES -Wl,--start-group ${MKL_INTERFACE_LIBRARY} ${MKL_CORE_LIBRARY} 
+  ${MKL_THREADING_LIBRARY} ${MKL_IOMP_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} 
+  -Wl,--end-group m dl)
 
 # set(MKL_LIBRARIES  ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a
 #                    ${MKLROOT}/lib/intel64/libmkl_core.a

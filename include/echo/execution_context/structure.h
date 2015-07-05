@@ -16,7 +16,7 @@ struct general : base {};
 
 struct square {};
 
-template<uplo_t Uplo, bool Strict> struct half : base, square {
+template<uplo_t Uplo, bool Strict> struct half : virtual base, virtual square {
   static const uplo_t uplo = Uplo;
   static const bool strict = Strict;
 };
