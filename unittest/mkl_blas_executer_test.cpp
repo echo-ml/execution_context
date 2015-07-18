@@ -10,4 +10,5 @@ static BlasExecuter blas_executer;
 
 TEST_CASE("mkl_blas_executer") {
   CHECK(execution_context::concept::blas_executer<BlasExecuter>());
+  CHECK(!execution_context::concept::blas_executer<int>());
 }

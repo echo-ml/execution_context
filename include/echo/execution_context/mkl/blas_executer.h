@@ -1,5 +1,7 @@
 #pragma once
 
+#define DETAIL_NS detail_blas_executer
+
 #include <echo/execution_context/matrix_utility.h>
 #include <echo/execution_context/structure.h>
 #include <echo/index.h>
@@ -10,11 +12,7 @@ namespace echo {
 namespace execution_context {
 namespace intel_mkl {
 
-using structure::uplo_t;
-
-namespace detail {
-namespace blas_executer {
-
+namespace DETAIL_NS {
 //------------------------------------------------------------------------------
 // get_operation
 //------------------------------------------------------------------------------
@@ -44,7 +42,7 @@ inline CBLAS_SIDE get_side(matrix_side_t side) {
 //------------------------------------------------------------------------------
 // get_uplo
 //------------------------------------------------------------------------------
-inline CBLAS_UPLO get_uplo(uplo_t uplo) {
+inline CBLAS_UPLO get_uplo(structure::uplo_t uplo) {
   switch (uplo) {
     case structure::uplo_t::upper:
       return CblasUpper;
@@ -67,13 +65,11 @@ inline CBLAS_DIAG is_unity_fill(matrix_diagonal_fill_t diagonal_fill) {
   }
 }
 }
-}
 
 //------------------------------------------------------------------------------
 // BlasExecuter
 //------------------------------------------------------------------------------
 struct BlasExecuter {
-
 //------------------------------------------------------------------------------
 // dot
 //------------------------------------------------------------------------------
@@ -94,7 +90,7 @@ struct BlasExecuter {
   void gemv(matrix_operation_t operation_a, index_t m, index_t n,            \
             SCALAR alpha, const SCALAR* a, index_t lda, const SCALAR* x,     \
             index_t incx, SCALAR beta, SCALAR* y, index_t incy) const {      \
-    using namespace detail::blas_executer;                                   \
+    using namespace DETAIL_NS;                                               \
     cblas_##PREFIX##gemv(CblasColMajor, get_operation(operation_a),          \
                          static_cast<int>(m), static_cast<int>(n), alpha, a, \
                          static_cast<int>(lda), x, static_cast<int>(incx),   \
@@ -105,15 +101,14 @@ struct BlasExecuter {
 
 #undef MAKE_GEMV
 
-
 //------------------------------------------------------------------------------
 // trsv
 //------------------------------------------------------------------------------
 #define MAKE_TRSV(SCALAR, PREFIX)                                              \
-  void trsv(uplo_t uplo_a, matrix_operation_t operation_a,                     \
+  void trsv(structure::uplo_t uplo_a, matrix_operation_t operation_a,          \
             matrix_diagonal_fill_t diagonal_fill_a, index_t n,                 \
             const SCALAR* a, index_t lda, SCALAR* x, index_t incx) const {     \
-    using namespace detail::blas_executer;                                     \
+    using namespace DETAIL_NS;                                                 \
     cblas_##PREFIX##trsv(CblasColMajor, get_uplo(uplo_a),                      \
                          get_operation(operation_a),                           \
                          is_unity_fill(diagonal_fill_a), static_cast<int>(n),  \
@@ -127,10 +122,10 @@ struct BlasExecuter {
 // symv
 //------------------------------------------------------------------------------
 #define MAKE_SYMV(SCALAR, PREFIX)                                              \
-  void symv(uplo_t uplo_a, index_t n, SCALAR alpha, const SCALAR* a,           \
-            index_t lda, const SCALAR* x, index_t incx, SCALAR beta,           \
-            SCALAR* y, index_t incy) const {                                   \
-    using namespace detail::blas_executer;                                     \
+  void symv(structure::uplo_t uplo_a, index_t n, SCALAR alpha,                 \
+            const SCALAR* a, index_t lda, const SCALAR* x, index_t incx,       \
+            SCALAR beta, SCALAR* y, index_t incy) const {                      \
+    using namespace DETAIL_NS;                                                 \
     cblas_##PREFIX##symv(CblasColMajor, get_uplo(uplo_a), static_cast<int>(n), \
                          alpha, a, static_cast<int>(lda), x,                   \
                          static_cast<int>(incx), beta, y,                      \
@@ -143,13 +138,13 @@ struct BlasExecuter {
 //------------------------------------------------------------------------------
 // syr
 //------------------------------------------------------------------------------
-#define MAKE_SYR(SCALAR, PREFIX)                                              \
-  void syr(uplo_t uplo_a, index_t n, SCALAR alpha, const SCALAR* x,           \
-           index_t incx, SCALAR* a, index_t lda) const {                      \
-    using namespace detail::blas_executer;                                    \
-    cblas_##PREFIX##syr(CblasColMajor, get_uplo(uplo_a), static_cast<int>(n), \
-                        alpha, x, static_cast<int>(incx), a,                  \
-                        static_cast<int>(lda));                               \
+#define MAKE_SYR(SCALAR, PREFIX)                                               \
+  void syr(structure::uplo_t uplo_a, index_t n, SCALAR alpha, const SCALAR* x, \
+           index_t incx, SCALAR* a, index_t lda) const {                       \
+    using namespace DETAIL_NS;                                                 \
+    cblas_##PREFIX##syr(CblasColMajor, get_uplo(uplo_a), static_cast<int>(n),  \
+                        alpha, x, static_cast<int>(incx), a,                   \
+                        static_cast<int>(lda));                                \
   }
   MAKE_SYR(float, s)
   MAKE_SYR(double, d)
@@ -159,10 +154,10 @@ struct BlasExecuter {
 // syr2
 //------------------------------------------------------------------------------
 #define MAKE_SYR2(SCALAR, PREFIX)                                              \
-  void syr2(uplo_t uplo_a, index_t n, SCALAR alpha, const SCALAR* x,           \
-            index_t incx, const SCALAR* y, index_t incy, SCALAR* a,            \
-            index_t lda) const {                                               \
-    using namespace detail::blas_executer;                                     \
+  void syr2(structure::uplo_t uplo_a, index_t n, SCALAR alpha,                 \
+            const SCALAR* x, index_t incx, const SCALAR* y, index_t incy,      \
+            SCALAR* a, index_t lda) const {                                    \
+    using namespace DETAIL_NS;                                                 \
     cblas_##PREFIX##syr2(CblasColMajor, get_uplo(uplo_a), static_cast<int>(n), \
                          alpha, x, static_cast<int>(incx), y,                  \
                          static_cast<int>(incy), a, static_cast<int>(lda));    \
@@ -179,7 +174,7 @@ struct BlasExecuter {
             index_t m, index_t n, index_t k, SCALAR alpha, const SCALAR* a,    \
             index_t lda, const SCALAR* b, index_t ldb, SCALAR beta, SCALAR* c, \
             index_t ldc) const {                                               \
-    using namespace detail::blas_executer;                                     \
+    using namespace DETAIL_NS;                                                 \
     cblas_##PREFIX##gemm(CblasColMajor, get_operation(operation_a),            \
                          get_operation(operation_b), static_cast<int>(m),      \
                          static_cast<int>(n), static_cast<int>(k), alpha, a,   \
@@ -194,11 +189,12 @@ struct BlasExecuter {
 // trsm
 //------------------------------------------------------------------------------
 #define MAKE_TRSM(SCALAR, PREFIX)                                              \
-  void trsm(matrix_side_t side, uplo_t uplo_a, matrix_operation_t operation_a, \
+  void trsm(matrix_side_t side, structure::uplo_t uplo_a,                      \
+            matrix_operation_t operation_a,                                    \
             matrix_diagonal_fill_t diagonal_fill_a, index_t m, index_t n,      \
             SCALAR alpha, const SCALAR* a, index_t lda, SCALAR* b,             \
             index_t ldb) const {                                               \
-    using namespace detail::blas_executer;                                     \
+    using namespace DETAIL_NS;                                                 \
     cblas_##PREFIX##trsm(CblasColMajor, get_side(side), get_uplo(uplo_a),      \
                          get_operation(operation_a),                           \
                          is_unity_fill(diagonal_fill_a), static_cast<int>(m),  \
@@ -213,10 +209,10 @@ struct BlasExecuter {
 // syrk
 //------------------------------------------------------------------------------
 #define MAKE_SYRK(SCALAR, PREFIX)                                              \
-  void syrk(uplo_t uplo_c, matrix_operation_t operation_a, index_t n,          \
-            index_t k, SCALAR alpha, const SCALAR* a, index_t lda,             \
+  void syrk(structure::uplo_t uplo_c, matrix_operation_t operation_a,          \
+            index_t n, index_t k, SCALAR alpha, const SCALAR* a, index_t lda,  \
             SCALAR beta, SCALAR* c, index_t ldc) const {                       \
-    using namespace detail::blas_executer;                                     \
+    using namespace DETAIL_NS;                                                 \
     cblas_##PREFIX##syrk(CblasColMajor, get_uplo(uplo_c),                      \
                          get_operation(operation_a), static_cast<int>(n),      \
                          static_cast<int>(k), alpha, a, static_cast<int>(lda), \
@@ -233,15 +229,16 @@ struct BlasExecuter {
 //------------------------------------------------------------------------------
 // symm
 //------------------------------------------------------------------------------
-#define MAKE_SYMM(SCALAR, PREFIX)                                            \
-  void symm(matrix_side_t side_a, uplo_t uplo_a, index_t m, index_t n,       \
-            SCALAR alpha, const SCALAR* a, index_t lda, const SCALAR* b,     \
-            index_t ldb, SCALAR beta, SCALAR* c, index_t ldc) const {        \
-    using namespace detail::blas_executer;                                   \
-    cblas_##PREFIX##symm(CblasColMajor, get_side(side_a), get_uplo(uplo_a),  \
-                         static_cast<int>(m), static_cast<int>(n), alpha, a, \
-                         static_cast<int>(lda), b, static_cast<int>(ldb),    \
-                         beta, c, static_cast<int>(ldc));                    \
+#define MAKE_SYMM(SCALAR, PREFIX)                                              \
+  void symm(matrix_side_t side_a, structure::uplo_t uplo_a, index_t m,         \
+            index_t n, SCALAR alpha, const SCALAR* a, index_t lda,             \
+            const SCALAR* b, index_t ldb, SCALAR beta, SCALAR* c, index_t ldc) \
+      const {                                                                  \
+    using namespace DETAIL_NS;                                                 \
+    cblas_##PREFIX##symm(CblasColMajor, get_side(side_a), get_uplo(uplo_a),    \
+                         static_cast<int>(m), static_cast<int>(n), alpha, a,   \
+                         static_cast<int>(lda), b, static_cast<int>(ldb),      \
+                         beta, c, static_cast<int>(ldc));                      \
   }
   MAKE_SYMM(float, s)
   MAKE_SYMM(double, d)
@@ -250,3 +247,5 @@ struct BlasExecuter {
 }
 }
 }
+
+#undef DETAIL_NS
