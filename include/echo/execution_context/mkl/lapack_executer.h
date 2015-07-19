@@ -11,16 +11,30 @@ namespace echo {
 namespace execution_context {
 namespace intel_mkl {
 
+namespace DETAIL_NS {
 //------------------------------------------------------------------------------
 // get_uplo
 //------------------------------------------------------------------------------
-namespace DETAIL_NS {
 inline char get_uplo(structure::uplo_t uplo) {
   switch (uplo) {
     case structure::uplo_t::upper:
       return 'U';
     case structure::uplo_t::lower:
       return 'L';
+  }
+}
+
+//------------------------------------------------------------------------------
+// get_operation
+//------------------------------------------------------------------------------
+inline char get_operation(matrix_operation_t operation) {
+  switch (operation) {
+    case matrix_operation_t::none:
+      return 'N';
+    case matrix_operation_t::transpose:
+      return 'T';
+    case matrix_operation_t::conjugate_transpose:
+      return 'C';
   }
 }
 }
@@ -58,6 +72,23 @@ struct LapackExecuter {
   MAKE_POTRI(float, s)
   MAKE_POTRI(double, d)
 #undef MAKE_POTRI
+
+//------------------------------------------------------------------------------
+// gels
+//------------------------------------------------------------------------------
+#define MAKE_GELS(SCALAR, SUFFIX)                                              \
+  lapack_int gels(matrix_operation_t operation_a, index_t m, index_t n,        \
+                  index_t nrhs, SCALAR* a, index_t lda, SCALAR* b,             \
+                  index_t ldb) const {                                         \
+    using namespace DETAIL_NS;                                                 \
+    return LAPACKE_##SUFFIX##gels(                                             \
+        CblasColMajor, get_operation(operation_a), static_cast<int>(m),        \
+        static_cast<int>(n), static_cast<int>(nrhs), a, static_cast<int>(lda), \
+        b, static_cast<int>(ldb));                                             \
+  }
+  MAKE_GELS(float, s)
+  MAKE_GELS(double, d)
+#undef MAKE_GELS
 };
 }
 }
