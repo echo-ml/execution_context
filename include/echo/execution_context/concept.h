@@ -13,15 +13,55 @@
 namespace echo {
 namespace execution_context {
 namespace concept {
+//------------------------------------------------------------------------------
+// real_scalar
+//------------------------------------------------------------------------------
+template <class T>
+constexpr bool real_scalar() {
+  return std::is_floating_point<T>::value;
+}
+
+//------------------------------------------------------------------------------
+// complex_scalar
+//------------------------------------------------------------------------------
+namespace DETAIL_NS {
+template <class T>
+auto complex_scalar_impl(std::complex<T> && )
+    -> std::integral_constant<bool, std::is_floating_point<T>::value>;
+
+template <class T>
+auto complex_scalar_impl(T && ) -> std::false_type;
+}
+template <class T>
+constexpr bool complex_scalar() {
+  using Result = decltype(DETAIL_NS::complex_scalar_impl(std::declval<T>()));
+  return Result::value;
+}
+
+//------------------------------------------------------------------------------
+// continual_scalar
+//------------------------------------------------------------------------------
+template <class T>
+constexpr bool continual_scalar() {
+  return real_scalar<T>() || complex_scalar<T>();
+}
+
+//------------------------------------------------------------------------------
+// standard_numeric_scalar
+//------------------------------------------------------------------------------
+template <class T>
+constexpr bool standard_numeric_scalar() {
+  return std::is_same<T, float>::value || std::is_same<T, double>::value ||
+         std::is_same<T, std::complex<float>>::value ||
+         std::is_same<T, std::complex<double>>::value;
+}
 
 //------------------------------------------------------------------------------
 // scalar
 //------------------------------------------------------------------------------
 template <class T>
 constexpr bool scalar() {
-  return std::is_integral<T>::value || std::is_floating_point<T>::value ||
-         std::is_same<T, std::complex<float>>::value ||
-         std::is_same<T, std::complex<double>>::value;
+  return std::is_integral<T>::value || continual_scalar<T>();
 }
 
 //------------------------------------------------------------------------------
