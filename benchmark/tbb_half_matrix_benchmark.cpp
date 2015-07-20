@@ -4,7 +4,6 @@
 #include <numeric>
 #include <random>
 #include <cmath>
-#include <Eigen/Dense>
 
 using namespace echo;
 using namespace echo::execution_context;
@@ -26,14 +25,10 @@ BENCHMARK_SET("tbb_half_matrix", NumTrials(1), LinearRange(1, 10'000, 1'000),
         return y[i + n * j] = std::sqrt(x[i + n * j]);
       });
   ExpressionExecuter executer;
-  BENCHMARK("half_expr") { 
-    executer(execution_mode::simd, expr1); 
-  }
+  BENCHMARK("half_expr") { executer(execution_mode::simd, expr1); }
   BENCHMARK("half_parallel_expr") {
     executer(execution_mode::simd | execution_mode::parallel, expr1);
   }
-  BENCHMARK("full_expr") { 
-    executer(execution_mode::simd, expr2); 
-  }
+  BENCHMARK("full_expr") { executer(execution_mode::simd, expr2); }
 }
 
