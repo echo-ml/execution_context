@@ -4,6 +4,7 @@
 
 #include <echo/concept.h>
 #include <echo/k_array.h>
+#include <echo/contract.h>
 #include <tbb/tbb.h>
 #include <cassert>
 #include <utility>
@@ -65,7 +66,9 @@ class BlockedRange {
 
   BlockedRange() = default;
   BlockedRange(Extent first, Extent last, size_type grainsize = 1)
-      : _last(last), _first(first), _grainsize(grainsize) {}
+      : _last(last), _first(first), _grainsize(grainsize) {
+    CONTRACT_EXPECT { CONTRACT_ASSERT(first <= last); };
+  }
   template <class SplitFactor,
             CONCEPT_REQUIRES(concept::split_factor<SplitFactor>())>
   BlockedRange(BlockedRange& other, const SplitFactor& split_factor)

@@ -167,6 +167,42 @@ struct BlasExecuter {
 #undef MAKE_SYR2
 
 //------------------------------------------------------------------------------
+// syrk
+//------------------------------------------------------------------------------
+#define MAKE_SYRK(SCALAR, PREFIX)                                              \
+  void syrk(structure::uplo_t uplo_c, matrix_operation_t operation_a,          \
+            index_t n, index_t k, SCALAR alpha, const SCALAR* a, index_t lda,  \
+            SCALAR beta, SCALAR* c, index_t ldc) const {                       \
+    using namespace DETAIL_NS;                                                 \
+    cblas_##PREFIX##syrk(CblasColMajor, get_uplo(uplo_c),                      \
+                         get_operation(operation_a), static_cast<int>(n),      \
+                         static_cast<int>(k), alpha, a, static_cast<int>(lda), \
+                         beta, c, static_cast<int>(ldc));                      \
+  }
+  MAKE_SYRK(float, s)
+  MAKE_SYRK(double, d)
+#undef MAKE_SYRK
+
+//------------------------------------------------------------------------------
+// syr2k
+//------------------------------------------------------------------------------
+#define MAKE_SYR2K(SCALAR, PREFIX)                                             \
+  void syr2k(structure::uplo_t uplo_c, matrix_operation_t operation,           \
+             index_t n, index_t k, SCALAR alpha, const SCALAR* a, index_t lda, \
+             const SCALAR* b, index_t ldb, SCALAR beta, SCALAR* c,             \
+             index_t ldc) const {                                              \
+    using namespace DETAIL_NS;                                                 \
+    cblas_##PREFIX##syr2k(CblasColMajor, get_uplo(uplo_c),                     \
+                          get_operation(operation), static_cast<int>(n),       \
+                          static_cast<int>(k), alpha, a,                       \
+                          static_cast<int>(lda), b, static_cast<int>(ldb),     \
+                          beta, c, static_cast<int>(ldc));                     \
+  }
+  MAKE_SYR2K(float, s)
+  MAKE_SYR2K(double, d)
+#undef MAKE_SYR2K
+
+//------------------------------------------------------------------------------
 // gemm
 //------------------------------------------------------------------------------
 #define MAKE_GEMM(SCALAR, PREFIX)                                              \
@@ -204,27 +240,6 @@ struct BlasExecuter {
   MAKE_TRSM(float, s)
   MAKE_TRSM(double, d)
 #undef MAKE_TRSM
-
-//------------------------------------------------------------------------------
-// syrk
-//------------------------------------------------------------------------------
-#define MAKE_SYRK(SCALAR, PREFIX)                                              \
-  void syrk(structure::uplo_t uplo_c, matrix_operation_t operation_a,          \
-            index_t n, index_t k, SCALAR alpha, const SCALAR* a, index_t lda,  \
-            SCALAR beta, SCALAR* c, index_t ldc) const {                       \
-    using namespace DETAIL_NS;                                                 \
-    cblas_##PREFIX##syrk(CblasColMajor, get_uplo(uplo_c),                      \
-                         get_operation(operation_a), static_cast<int>(n),      \
-                         static_cast<int>(k), alpha, a, static_cast<int>(lda), \
-                         beta, c, static_cast<int>(ldc));                      \
-  }
-  MAKE_SYRK(float, s)
-  MAKE_SYRK(double, d)
-#undef MAKE_SYRK
-
-//------------------------------------------------------------------------------
-// syr2k
-//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 // symm
