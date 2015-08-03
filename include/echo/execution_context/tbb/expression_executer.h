@@ -412,7 +412,7 @@ class ExpressionExecuter {
       Options options, index_t first, index_t last,
       uncvref_t<decltype(std::declval<Expression>().identity())> init,
       const Expression& expression) const {
-    auto result = init;
+    reduction_expression_traits::value_type<Expression> result = init;
     auto mapper = expression.mapper();
     auto reducer = expression.reducer();
     detail::for_(options, first, last, [&](index_t i) {
@@ -454,14 +454,15 @@ class ExpressionExecuter {
                 get_option<execution_mode::parallel_t, Options>() ==
                     execution_mode::parallel_coarse)>
   auto execute(Options options, const Expression& expression) const {
-    using Scalar = uncvref_t<decltype(std::declval<Expression>().identity())>;
+    using Identity = uncvref_t<decltype(std::declval<Expression>().identity())>;
+    using Scalar = reduction_expression_traits::value_type<Expression>;
     constexpr int NumDimensions =
         expression_traits::num_dimensions<Expression>();
     return tbb::parallel_reduce(
         make_blocked_range(expression.dimensionality(), kCoarseGrainularity),
-        expression.identity(),
+        static_cast<Scalar>(expression.identity()),
         [&](const KBlockedRange<NumDimensions, index_t>& blocked_range,
-            Scalar init) {
+            Identity init) {
           return map_reduce(options, blocked_range, init, expression);
         },
         expression.reducer());
@@ -481,24 +482,19 @@ class ExpressionExecuter {
                       expression.identity(), expression);
   }
 
-  template <
-      class Options, class Scalar, class Expression,
-      CONCEPT_REQUIRES(
-          option::concept::option_list<Options>() &&
-          execution_context::concept::k_evaluator_reduction_expression<
-              Expression>() &&
-          structure::concept::general<
-              reduction_expression_traits::structure<Expression>>()
-          // check is broken with intel compiler
-          // && std::is_same<Scalar, reduction_expression_traits::value_type<
-          //                          Expression>>::value
-          )>
+  template <class Options, class Identity, class Expression,
+            CONCEPT_REQUIRES(
+                option::concept::option_list<Options>() &&
+                execution_context::concept::k_evaluator_reduction_expression<
+                    Expression>() &&
+                structure::concept::general<
+                    reduction_expression_traits::structure<Expression>>())>
   auto map_reduce(Options options,
                   const KBlockedRange<
                       reduction_expression_traits::num_dimensions<Expression>(),
                       index_t>& blocked_range,
-                  Scalar init, const Expression& expression) const {
-    auto result = init;
+                  Identity init, const Expression& expression) const {
+    reduction_expression_traits::value_type<Expression> result = init;
     map_reduce(options,
                std::make_index_sequence<
                    reduction_expression_traits::num_dimensions<Expression>()>(),
