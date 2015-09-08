@@ -17,4 +17,9 @@ enum class matrix_side_t { left, right };
 //------------------------------------------------------------------------------
 enum class matrix_diagonal_fill_t { general, unity, null };
 
+//------------------------------------------------------------------------------
+// result_output_mode_t
+//------------------------------------------------------------------------------
+enum class result_output_mode_t { all, subset, overwrite, none };
+
 }}

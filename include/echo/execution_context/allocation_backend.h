@@ -25,7 +25,8 @@ auto make_allocator(const AllocationBackend<Allocator>&) {
 //------------------------------------------------------------------------------
 template <class T, template <class> class Allocator>
 auto make_aligned_allocator(const AllocationBackend<Allocator>&) {
-  return boost::alignment::aligned_allocator_adaptor<Allocator<T>, ECHO_SIMD_ALIGNMENT>();
+  return boost::alignment::aligned_allocator_adaptor<Allocator<T>,
+                                                     ECHO_SIMD_ALIGNMENT>();
 }
 }
 }
