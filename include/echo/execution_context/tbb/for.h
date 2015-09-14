@@ -21,7 +21,7 @@ template <
     CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
                      execution_context::concept::flat_evaluator<Evaluator>()),
     CONCEPT_REQUIRES(get_option<execution_mode::simd_t, Options>() ==
-                         execution_mode::nosimd &&
+                         execution_mode::no_simd &&
                      get_option<execution_mode::temporal_t, Options>() ==
                          execution_mode::temporal &&
                      get_option<execution_mode::aligned_t, Options>() ==
@@ -56,7 +56,7 @@ template <
     CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
                      execution_context::concept::flat_evaluator<Evaluator>()),
     CONCEPT_REQUIRES(get_option<execution_mode::simd_t, Options>() ==
-                         execution_mode::nosimd &&
+                         execution_mode::no_simd &&
                      get_option<execution_mode::temporal_t, Options>() ==
                          execution_mode::nontemporal &&
                      get_option<execution_mode::aligned_t, Options>() ==
@@ -132,7 +132,7 @@ template <
     CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
                      execution_context::concept::flat_evaluator<Evaluator>()),
     CONCEPT_REQUIRES(get_option<execution_mode::simd_t, Options>() ==
-                         execution_mode::nosimd &&
+                         execution_mode::no_simd &&
                      get_option<execution_mode::temporal_t, Options>() ==
                          execution_mode::temporal &&
                      get_option<execution_mode::aligned_t, Options>() ==
@@ -171,7 +171,7 @@ template <
     CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
                      execution_context::concept::flat_evaluator<Evaluator>()),
     CONCEPT_REQUIRES(get_option<execution_mode::simd_t, Options>() ==
-                         execution_mode::nosimd &&
+                         execution_mode::no_simd &&
                      get_option<execution_mode::temporal_t, Options>() ==
                          execution_mode::nontemporal &&
                      get_option<execution_mode::aligned_t, Options>() ==
@@ -255,7 +255,7 @@ template <
     CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
                      execution_context::concept::flat_evaluator<Evaluator>()),
     CONCEPT_REQUIRES(get_option<execution_mode::simd_t, Options>() ==
-                         execution_mode::nosimd &&
+                         execution_mode::no_simd &&
                      get_option<execution_mode::temporal_t, Options>() ==
                          execution_mode::temporal &&
                      get_option<execution_mode::aligned_t, Options>() ==
@@ -294,7 +294,7 @@ template <
     CONCEPT_REQUIRES(option::concept::option_list<Options>() &&
                      execution_context::concept::flat_evaluator<Evaluator>()),
     CONCEPT_REQUIRES(get_option<execution_mode::simd_t, Options>() ==
-                         execution_mode::nosimd &&
+                         execution_mode::no_simd &&
                      get_option<execution_mode::temporal_t, Options>() ==
                          execution_mode::nontemporal &&
                      get_option<execution_mode::aligned_t, Options>() ==

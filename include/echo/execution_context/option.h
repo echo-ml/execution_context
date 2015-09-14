@@ -13,7 +13,7 @@ enum class aligned_t { yes, no };
 enum class inline_t { force, suggest, nosuggest };
 
 constexpr option::Option<simd_t, simd_t::yes> simd{};
-constexpr option::Option<simd_t, simd_t::no> nosimd{};
+constexpr option::Option<simd_t, simd_t::no> no_simd{};
 
 constexpr option::Option<temporal_t, temporal_t::yes> temporal{};
 constexpr option::Option<temporal_t, temporal_t::no> nontemporal{};

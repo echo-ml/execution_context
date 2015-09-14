@@ -16,7 +16,7 @@ namespace intel_tbb {
 //------------------------------------------------------------------------------
 class ExpressionExecuter {
   static constexpr auto kDefaultOptions =
-      execution_mode::nosimd | execution_mode::serial |
+      execution_mode::no_simd | execution_mode::serial |
       execution_mode::temporal | execution_mode::nonaligned |
       execution_mode::suggest_inline;
 
